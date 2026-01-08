@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: incidents_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: incidents_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: incidents_backend
+    restart: always
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://user:password@db:5432/incidents_db"
+    volumes:
+      - ./backend:/app
+
+volumes:
+  db_data:
