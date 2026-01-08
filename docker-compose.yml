@@ -28,5 +28,13 @@ services:
     volumes:
       - ./backend:/app
 
+  frontend:
+    build: ./frontend
+    container_name: incidents_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
 volumes:
   db_data:
