@@ -1,20 +1,48 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
-const getMarkerIcon = (severity) => {
-  let color = "blue";
-  if (severity === "low") color = "green";
-  else if (severity === "medium") color = "orange";
-  else if (severity === "high") color = "red";
+import { mdiAlertCircle, mdiFire, mdiTriangleWave } from "@mdi/js";
 
-  return new L.Icon({
-    iconUrl: `https://chart.apis.google.com/chart?chst=d_map_pin_icon&chld=info|${color}`,
-    iconSize: [30, 50],
-    iconAnchor: [15, 50],
-    popupAnchor: [0, -50],
+const getSeverityColor = (type, severity) => {
+  if (!severity) return "blue"; // default
+
+  if (type === "Earthquake") {
+    // magnitude
+    const mag = parseFloat(severity.replace("M ", ""));
+    if (mag < 4.0) return "green";
+    else if (mag < 6.0) return "orange";
+    else return "red";
+  } else if (type === "Wildfire") {
+    // fire
+    const ha = parseFloat(severity.replace("ha ", ""));
+    if (ha < 1000) return "green";
+    else if (ha < 10000) return "orange";
+    else return "red";
+  }
+
+  return "blue";
+};
+
+const getMarkerIcon = (type, severity) => {
+  const color = getSeverityColor(type, severity);
+
+  let path = mdiAlertCircle;
+  if (type === "Earthquake") path = mdiTriangleWave;
+  else if (type === "Wildfire") path = mdiFire;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+      <path fill="${color}" d="${path}" />
+  </svg>`;
+
+  return L.divIcon({
+    html: svg,
+    iconSize: [28, 28],
+    className: "",
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
   });
 };
 
@@ -39,17 +67,24 @@ const Map = () => {
         <Marker
           key={inc.incident_id}
           position={[inc.latitude || 0, inc.longitude || 0]}
-          icon={getMarkerIcon(inc.severity?.toLowerCase())}
+          icon={getMarkerIcon(inc.type, inc.severity?.toLowerCase())}
         >
           <Popup>
             <b>{inc.title}</b>
             <br />
-            Type: {inc.type} <br />
-            Severity: {inc.severity} <br />
-            Location: {inc.city}, {inc.country} <br />
-            <a href={inc.source_url} target="_blank" rel="noreferrer">
-              Source
-            </a>
+            Type: {inc.type || "N/A"} <br />
+            Severity: {inc.severity || "N/A"} <br />
+            Location: {inc.city || "N/A"}, {inc.country || "N/A"} <br />
+            Date Occurred:{" "}
+            {inc.date_occurred
+              ? new Date(inc.date_occurred).toLocaleDateString()
+              : "N/A"}
+            <br />
+            {inc.source_url && (
+              <a href={inc.source_url} target="_blank" rel="noreferrer">
+                Source
+              </a>
+            )}
           </Popup>
         </Marker>
       ))}

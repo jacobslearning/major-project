@@ -7,16 +7,14 @@ from models import Incident
 from datetime import datetime
 
 def load_dataset(file_path: str) -> pd.DataFrame:
-    """
-    Load earthquake dataset from TSV and preprocess it.
-    """
-    df = pd.read_csv(file_path, sep='\t', comment='#', dtype=str)
+    df = pd.read_csv(file_path, dtype=str)
+    df = df[~df['title'].str.startswith('#', na=False)]
+    print("Columns found:", df.columns.tolist())
+    print("First rows:", df.head())
 
-    # Convert date columns
     df['from_date'] = pd.to_datetime(df.get('from_date'), errors='coerce', utc=True)
     df['to_date'] = pd.to_datetime(df.get('to_date'), errors='coerce', utc=True)
 
-    # Convert numeric columns
     df['geo_lat'] = pd.to_numeric(df.get('geo_lat'), errors='coerce')
     df['geo_long'] = pd.to_numeric(df.get('geo_long'), errors='coerce')
     df['severity_value'] = pd.to_numeric(df.get('severity_value'), errors='coerce')
@@ -24,7 +22,7 @@ def load_dataset(file_path: str) -> pd.DataFrame:
     for col in df.columns:
         if df[col].dtype == 'object':
             df[col] = df[col].str.strip()
-
+    df = df.dropna(subset=['title'])
     return df
 
 def map_earthquake_row_to_incident(row: pd.Series) -> Incident:
@@ -49,7 +47,7 @@ def map_earthquake_row_to_incident(row: pd.Series) -> Incident:
 
 def ingest_to_db(file_path: str, mapper_func):
     """
-    Generic ingestion function for any dataset using a mapper.
+    Ingestion function 
     """
     df = load_dataset(file_path)
     session: Session = SessionLocal()
@@ -68,3 +66,4 @@ def ingest_to_db(file_path: str, mapper_func):
 
 if __name__ == "__main__":
     dataset_path = "data/gdacs_rss_information.csv" 
+    ingest_to_db(dataset_path, map_earthquake_row_to_incident)

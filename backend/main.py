@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 from database import SessionLocal, engine, Base
 from models import Incident
 from schemas import IncidentCreate, IncidentResponse
@@ -9,6 +10,18 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Overseas Incident Backend")
 
+origins = [
+    "http://localhost:3000",   # your React frontend
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # allow frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],         # allow GET, POST, PUT, DELETE
+    allow_headers=["*"],         # allow all headers
+)
 def get_db():
     db = SessionLocal()
     try:
