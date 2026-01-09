@@ -4,7 +4,13 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
-import { mdiAlertCircle, mdiFire, mdiTriangleWave, mdiBomb } from "@mdi/js";
+import {
+  mdiAlertCircle,
+  mdiFire,
+  mdiTriangleWave,
+  mdiBomb,
+  mdiHomeFlood,
+} from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
   if (type === "Terrorist Attack") {
@@ -47,6 +53,7 @@ const getMarkerIcon = (type, severity) => {
   if (type === "Earthquake") path = mdiTriangleWave;
   else if (type === "Wildfire") path = mdiFire;
   else if (type === "Terrorist Attack") path = mdiBomb;
+  else if (type === "Flood") path = mdiHomeFlood;
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
@@ -67,8 +74,10 @@ const Map = () => {
   const [incidents, setIncidents] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const fetchIncidents = () => {
+    setLoading(true);
     let url = "http://localhost:8000/incidents/";
     const params = {};
     if (startDate) params.start_date = startDate;
@@ -77,7 +86,8 @@ const Map = () => {
     axios
       .get(url, { params })
       .then((res) => setIncidents(res.data))
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -111,6 +121,8 @@ const Map = () => {
           Filter
         </button>
       </div>
+
+      {loading && <div>Loading incidents...</div>}
 
       <MapContainer
         center={[20, 0]}
