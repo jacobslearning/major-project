@@ -1,10 +1,52 @@
-# ingest.py
-
 import pandas as pd
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from database import SessionLocal
 from models import Incident
-from datetime import datetime
+import math
+import re
+
+def safe_float(value):
+    if value is None:
+        return None
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    return value
+
+def strip_leading_date(text: str) -> str:
+    if not text:
+        return text
+    return re.sub(r'^\d{1,2}/\d{1,2}/\d{4}:\s*', '', text)
+
+def load_terrorism_dataset(file_path: str) -> pd.DataFrame:
+    df = pd.read_excel(file_path, dtype=str)
+
+    print("Columns found:", df.columns.tolist())
+    print("First rows:", df.head())
+
+    if {'date_year', 'date_month', 'date_day'}.issubset(df.columns):
+        df['event_date'] = pd.to_datetime(
+            df[['date_year', 'date_month', 'date_day']]
+                .rename(columns={
+                    'date_year': 'year',
+                    'date_month': 'month',
+                    'date_day': 'day'
+                }),
+            errors='coerce'
+        )
+    else:
+        df['event_date'] = pd.to_datetime(df.get('event_date'), errors='coerce')
+
+    for col in ['latitude', 'longitude', 'killed_low', 'killed_high']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col] = df[col].str.strip()
+
+    df = df.dropna(subset=['summary', 'latitude', 'longitude'])
+
+    return df
 
 def load_dataset(file_path: str) -> pd.DataFrame:
     df = pd.read_csv(file_path, dtype=str)
@@ -25,10 +67,31 @@ def load_dataset(file_path: str) -> pd.DataFrame:
     df = df.dropna(subset=['title'])
     return df
 
+def map_terrorism_row_to_incident(row: pd.Series) -> Incident:
+    killed_low = row.get('killed_low') or 0
+    killed_high = row.get('killed_high') or killed_low
+    wounded_low = row.get('wounded_low') or 0
+    wounded_high = row.get('wounded_high') or wounded_low
+
+    severity = f"Killed {int(killed_low)}–{int(killed_high)}, Wounded {int(wounded_low)}–{int(wounded_high)}"
+
+    # remove date from title
+    summary = strip_leading_date(row.get('summary') or "")
+
+    return Incident(
+        title=summary,
+        type="Terrorist Attack",
+        severity=severity,
+        country=row.get('admin0_txt'),
+        city=row.get('city_txt'),
+        latitude=row.get('latitude'),
+        longitude=row.get('longitude'),
+        date_occurred=row.get('event_date'),
+        source_url="https://subjectguides.library.american.edu/c.php?g=478725&p=3273238"
+    )
+
+
 def map_earthquake_row_to_incident(row: pd.Series) -> Incident:
-    """
-    Map a row to an Incident
-    """
     severity = None
     if row.get('severity_value'):
         severity = f"{row.get('severity_unit')} {row.get('severity_value')}"
@@ -45,17 +108,15 @@ def map_earthquake_row_to_incident(row: pd.Series) -> Incident:
         source_url=row.get('link')
     )
 
-def ingest_to_db(file_path: str, mapper_func):
-    """
-    Ingestion function 
-    """
-    df = load_dataset(file_path)
+def ingest_to_db(file_path: str, loader_func, mapper_func):
+    df = loader_func(file_path)
     session: Session = SessionLocal()
 
     try:
         for _, row in df.iterrows():
             incident = mapper_func(row)
             session.add(incident)
+
         session.commit()
         print(f"Successfully ingested {len(df)} records.")
     except Exception as e:
@@ -64,6 +125,7 @@ def ingest_to_db(file_path: str, mapper_func):
     finally:
         session.close()
 
+
 if __name__ == "__main__":
-    dataset_path = "data/gdacs_rss_information.csv" 
-    ingest_to_db(dataset_path, map_earthquake_row_to_incident)
+    ingest_to_db("data/gdacs_rss_information.csv",load_dataset,map_earthquake_row_to_incident)
+    ingest_to_db("data/dsat_dist_2020_10.xlsx",load_terrorism_dataset,map_terrorism_row_to_incident)

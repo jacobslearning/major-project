@@ -4,19 +4,33 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
-import { mdiAlertCircle, mdiFire, mdiTriangleWave } from "@mdi/js";
+import { mdiAlertCircle, mdiFire, mdiTriangleWave, mdiBomb } from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
-  if (!severity) return "blue"; // default
+  if (type === "Terrorist Attack") {
+    if (!severity) return "blue";
+
+    const killedMatch = severity.match(/killed[:\s]+(\d+)/i);
+    const woundedMatch = severity.match(/wounded[:\s]+(\d+)/i);
+
+    const killed = killedMatch ? parseInt(killedMatch[1]) : 0;
+    const wounded = woundedMatch ? parseInt(woundedMatch[1]) : 0;
+
+    if (killed > 0) return "red";
+    if (wounded > 0) return "orange";
+    return "blue";
+  }
+
+  if (!severity) return "blue";
 
   if (type === "Earthquake") {
-    // magnitude
     const mag = parseFloat(severity.replace("M ", ""));
     if (mag < 4.0) return "green";
     else if (mag < 6.0) return "orange";
     else return "red";
-  } else if (type === "Wildfire") {
-    // fire
+  }
+
+  if (type === "Wildfire") {
     const ha = parseFloat(severity.replace("ha ", ""));
     if (ha < 1000) return "green";
     else if (ha < 10000) return "orange";
@@ -32,10 +46,13 @@ const getMarkerIcon = (type, severity) => {
   let path = mdiAlertCircle;
   if (type === "Earthquake") path = mdiTriangleWave;
   else if (type === "Wildfire") path = mdiFire;
+  else if (type === "Terrorist Attack") path = mdiBomb;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
       <path fill="${color}" d="${path}" />
-  </svg>`;
+    </svg>
+  `;
 
   return L.divIcon({
     html: svg,

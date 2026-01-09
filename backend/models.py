@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String,Text, Float, DateTime
 from database import Base
 
 class Incident(Base):
     __tablename__ = "incidents"
 
     incident_id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
+    title = Column(Text, nullable=False)
     type = Column(String)
     severity = Column(String)
     country = Column(String)
