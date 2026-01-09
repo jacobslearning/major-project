@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from database import SessionLocal, engine, Base
 from models import Incident
 from schemas import IncidentCreate, IncidentResponse
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 Base.metadata.create_all(bind=engine)
 
@@ -39,8 +40,21 @@ def create_incident(incident: IncidentCreate, db: Session = Depends(get_db)):
 
 # all incidents
 @app.get("/incidents/", response_model=List[IncidentResponse])
-def list_incidents(db: Session = Depends(get_db)):
-    return db.query(Incident).all()
+def list_incidents(
+    start_date: Optional[datetime] = Query(None, description="Start date YYYY-MM-DD"),
+    end_date: Optional[datetime] = Query(None, description="End date YYYY-MM-DD"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Incident)
+
+    if start_date and end_date:
+        query = query.filter(Incident.date_occurred.between(start_date, end_date))
+    elif start_date:
+        query = query.filter(Incident.date_occurred >= start_date)
+    elif end_date:
+        query = query.filter(Incident.date_occurred <= end_date)
+
+    return query.all()
 
 @app.get("/incidents/{incident_id}", response_model=IncidentResponse)
 def get_incident(incident_id: int, db: Session = Depends(get_db)):

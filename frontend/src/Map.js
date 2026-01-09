@@ -65,47 +65,86 @@ const getMarkerIcon = (type, severity) => {
 
 const Map = () => {
   const [incidents, setIncidents] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  useEffect(() => {
+  const fetchIncidents = () => {
+    let url = "http://localhost:8000/incidents/";
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+
     axios
-      .get("http://localhost:8000/incidents/")
+      .get(url, { params })
       .then((res) => setIncidents(res.data))
       .catch((err) => console.error(err));
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchIncidents();
+  }, []); // initial load
+
+  const handleFilter = () => {
+    fetchIncidents();
+  };
 
   return (
-    <MapContainer
-      center={[20, 0]}
-      zoom={2}
-      style={{ height: "80vh", width: "100%" }}
-    >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {incidents.map((inc) => (
-        <Marker
-          key={inc.incident_id}
-          position={[inc.latitude || 0, inc.longitude || 0]}
-          icon={getMarkerIcon(inc.type, inc.severity?.toLowerCase())}
-        >
-          <Popup>
-            <b>{inc.title}</b>
-            <br />
-            Type: {inc.type || "N/A"} <br />
-            Severity: {inc.severity || "N/A"} <br />
-            Location: {inc.city || "N/A"}, {inc.country || "N/A"} <br />
-            Date Occurred:{" "}
-            {inc.date_occurred
-              ? new Date(inc.date_occurred).toLocaleDateString()
-              : "N/A"}
-            <br />
-            {inc.source_url && (
-              <a href={inc.source_url} target="_blank" rel="noreferrer">
-                Source
-              </a>
-            )}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <>
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          Start Date:{" "}
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </label>
+        <label style={{ marginLeft: "10px" }}>
+          End Date:{" "}
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </label>
+        <button onClick={handleFilter} style={{ marginLeft: "10px" }}>
+          Filter
+        </button>
+      </div>
+
+      <MapContainer
+        center={[20, 0]}
+        zoom={2}
+        style={{ height: "80vh", width: "100%" }}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {incidents.map((inc) => (
+          <Marker
+            key={inc.incident_id}
+            position={[inc.latitude || 0, inc.longitude || 0]}
+            icon={getMarkerIcon(inc.type, inc.severity?.toLowerCase())}
+          >
+            <Popup>
+              <b>{inc.title}</b>
+              <br />
+              Type: {inc.type || "N/A"} <br />
+              Severity: {inc.severity || "N/A"} <br />
+              Location: {inc.city || "N/A"}, {inc.country || "N/A"} <br />
+              Date Occurred:{" "}
+              {inc.date_occurred
+                ? new Date(inc.date_occurred).toLocaleDateString()
+                : "N/A"}
+              <br />
+              {inc.source_url && (
+                <a href={inc.source_url} target="_blank" rel="noreferrer">
+                  Source
+                </a>
+              )}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </>
   );
 };
 
