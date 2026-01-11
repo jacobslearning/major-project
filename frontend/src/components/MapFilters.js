@@ -14,7 +14,9 @@ const MapFilters = ({ selectedTypes, setSelectedTypes, allTypes }) => {
     container.style.padding = "8px";
     container.style.borderRadius = "4px";
     container.style.color = "#fff";
-
+    container.style.maxHeight = "300px";
+    container.style.overflowY = "auto";
+    container.style.width = "200px";
     container.innerHTML = "<b>Filter by Type</b><br/>";
 
     allTypes.forEach((type) => {

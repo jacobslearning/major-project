@@ -6,6 +6,7 @@ const Metrics = ({ incidents = [] }) => {
   const droughts = incidents.filter((i) => i.type === "Drought").length;
   const volcanos = incidents.filter((i) => i.type === "Volcano").length;
   const protests = incidents.filter((i) => i.type === "Protest").length;
+  const airStrikes = incidents.filter((i) => i.type === "Air Strike").length;
   const ukraineIncidents = incidents.filter(
     (i) => i.country === "Ukraine"
   ).length;
@@ -28,6 +29,11 @@ const Metrics = ({ incidents = [] }) => {
       <div className="metric dark">
         <span>Terrorist Attacks</span>
         <span>{attacks}</span>
+      </div>
+
+      <div className="metric dark">
+        <span>Air Strikes</span>
+        <span>{airStrikes}</span>
       </div>
 
       <div className="metric dark">
