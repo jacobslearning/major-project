@@ -1,9 +1,14 @@
 const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  const todayString = today.toISOString().split("T")[0];
+
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  const twoMonthsAgoString = twoMonthsAgo.toISOString().split("T")[0];
 
   const handleReset = () => {
-    setFromDate("");
-    setToDate(today);
+    setFromDate(twoMonthsAgoString);
+    setToDate(todayString);
   };
 
   return (
@@ -15,7 +20,7 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
           From:
           <input
             type="date"
-            value={fromDate}
+            value={fromDate || ""}
             onChange={(e) => setFromDate(e.target.value)}
           />
         </label>
@@ -24,7 +29,7 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
           To:
           <input
             type="date"
-            value={toDate}
+            value={toDate || ""}
             onChange={(e) => setToDate(e.target.value)}
           />
         </label>

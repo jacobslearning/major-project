@@ -16,7 +16,10 @@ function App() {
   const [selectedIncident, setSelectedIncident] = useState(null);
 
   const today = new Date().toISOString().split("T")[0];
-  const [fromDate, setFromDate] = useState("");
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  const twoMonthsAgoString = twoMonthsAgo.toISOString().split("T")[0];
+  const [fromDate, setFromDate] = useState(twoMonthsAgoString);
   const [toDate, setToDate] = useState(today);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
