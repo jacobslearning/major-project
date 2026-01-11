@@ -12,6 +12,14 @@ def safe_float(value):
         return None
     return value
 
+def safe_int(value):
+    try:
+        if pd.isna(value):
+            return 0
+        return int(float(value))
+    except (ValueError, TypeError):
+        return 0
+
 def strip_leading_date(text: str) -> str:
     if not text:
         return text
@@ -47,6 +55,27 @@ def load_terrorism_dataset(file_path: str) -> pd.DataFrame:
     df = df.dropna(subset=['summary', 'latitude', 'longitude'])
 
     return df
+
+def load_event1pd_dataset(file_path: str) -> pd.DataFrame:
+    df = pd.read_csv(file_path, dtype=str)
+    print("Columns found:", df.columns.tolist())
+    print("First rows:", df.head())
+
+    df['latitude'] = pd.to_numeric(df.get('latitude'), errors='coerce')
+    df['longitude'] = pd.to_numeric(df.get('longitude'), errors='coerce')
+
+    int_cols = ['n_reports', 't_mil_b', 'a_rus_b', 'a_ukr_b', 'a_civ_b', 'a_other_b',
+                't_airstrike_b', 't_airalert_b', 't_uav_b', 't_artillery_b', 't_firefight_b',
+                't_raid_b', 't_occupy_b', 't_armor_b', 't_arrest_b', 't_ied_b', 't_cyber_b',
+                't_hospital_b', 't_milcas_b', 't_civcas_b', 't_retreat_b', 't_loc_b', 't_san_b',
+                't_property_b', 't_control_b', 't_aad_b']
+
+    for col in int_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+
+    return df
+
 
 def load_dataset(file_path: str) -> pd.DataFrame:
     df = pd.read_csv(file_path, dtype=str)
@@ -126,6 +155,61 @@ def map_earthquake_row_to_incident(row: pd.Series) -> Incident:
         source_url=row.get('link')
     )
 
+def map_event1pd_row_to_incident(row: pd.Series) -> Incident:
+    type_priority = [
+        ('Air Strike', 't_airstrike_b'),
+        ('Air Alert', 't_airalert_b'),
+        ('UAV Attack', 't_uav_b'),
+        ('Artillery Strike', 't_artillery_b'),
+        ('Firefight', 't_firefight_b'),
+        ('Raid', 't_raid_b'),
+        ('Occupation', 't_occupy_b'),
+        ('Armor Engagement', 't_armor_b'),
+        ('Arrest', 't_arrest_b'),
+        ('IED', 't_ied_b'),
+        ('Cyber Attack', 't_cyber_b'),
+        ('Hospital Attack', 't_hospital_b'),
+        ('Military Casualty', 't_milcas_b'),
+        ('Civilian Casualty', 't_civcas_b'),
+        ('Retreat', 't_retreat_b'),
+        ('Sanctions', 't_san_b'),
+        ('Property Damage', 't_property_b'),
+        ('Control', 't_control_b'),
+        ('Loc Ops', 't_loc_b')
+    ]
+
+    selected_type = "Other Event"
+    for label, col in type_priority:
+        if safe_int(row.get(col)) > 0:
+            selected_type = label
+            break
+
+    severity_parts = []
+    if safe_int(row.get('t_mil_b')): severity_parts.append(f"Military {safe_int(row.get('t_mil_b'))}")
+    if safe_int(row.get('a_rus_b')): severity_parts.append(f"Russian {safe_int(row.get('a_rus_b'))}")
+    if safe_int(row.get('a_ukr_b')): severity_parts.append(f"Ukrainian {safe_int(row.get('a_ukr_b'))}")
+    if safe_int(row.get('a_civ_b')): severity_parts.append(f"Civilians {safe_int(row.get('a_civ_b'))}")
+    if safe_int(row.get('a_other_b')): severity_parts.append(f"Other {safe_int(row.get('a_other_b'))}")
+    severity = ", ".join(severity_parts) if severity_parts else None
+
+    event_date = pd.to_datetime(str(row.get('date')), format='%Y%m%d', errors='coerce')
+    n_reports = safe_int(row.get('n_reports'))
+
+    location_info = f"{row.get('asciiname')}, {row.get('ADM1_NAME')}"
+    title = f"{selected_type} at {location_info} (Times Reported: {n_reports})"
+    return Incident(
+        title=title,
+        type=selected_type,
+        severity=severity,
+        country="Ukraine",
+        city=str(row.get('ADM2_NAME')),
+        latitude=safe_float(row.get('latitude')),
+        longitude=safe_float(row.get('longitude')),
+        date_occurred=event_date,
+        source_url=row.get('sources')
+    )
+
+
 def ingest_to_db(file_path: str, loader_func, mapper_func):
     df = loader_func(file_path)
     session: Session = SessionLocal()
@@ -145,5 +229,7 @@ def ingest_to_db(file_path: str, loader_func, mapper_func):
 
 
 if __name__ == "__main__":
-    ingest_to_db("data/gdacs_rss_information.csv",load_dataset,map_earthquake_row_to_incident)
-    ingest_to_db("data/dsat_dist_2020_10.xlsx",load_terrorism_dataset,map_terrorism_row_to_incident)
+   # ingest_to_db("data/gdacs_rss_information.csv",load_dataset,map_earthquake_row_to_incident)
+    #ingest_to_db("data/dsat_dist_2020_10.xlsx",load_terrorism_dataset,map_terrorism_row_to_incident)
+    ingest_to_db("data/event_1pd_latest_2025.csv", load_event1pd_dataset, map_event1pd_row_to_incident)
+    ingest_to_db("data/event_1pd_latest_2026.csv", load_event1pd_dataset, map_event1pd_row_to_incident)

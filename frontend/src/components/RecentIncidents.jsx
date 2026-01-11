@@ -4,8 +4,15 @@ import {
   mdiTriangleWave,
   mdiBomb,
   mdiHomeFlood,
-  mdiWaterAlert,
   mdiVolcano,
+  mdiWaterAlert,
+  mdiTank,
+  mdiShield,
+  mdiHospitalBox,
+  mdiAirplane,
+  mdiShieldCheck,
+  mdiHospitalMarker,
+  mdiPistol,
 } from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
@@ -22,6 +29,24 @@ const getSeverityColor = (type, severity) => {
     if (wounded > 0) return "orange";
     return "gray";
   }
+
+  if (
+    type === "Air Strike" ||
+    type === "Artillery Strike" ||
+    type === "UAV Attack"
+  )
+    return "red";
+  if (type === "Firefight" || type === "Raid" || type === "Armor Engagement")
+    return "orange";
+  if (type === "Occupation" || type === "Retreat" || type === "Loc Ops")
+    return "blue";
+  if (type === "Arrest" || type === "Sanctions" || type === "Control")
+    return "purple";
+  if (type === "IED" || type === "Cyber Attack") return "black";
+  if (type === "Military Casualty") return "darkred";
+  if (type === "Civilian Casualty") return "darkorange";
+  if (type === "Hospital Attack") return "pink";
+  if (type === "Property Damage") return "brown";
 
   if (type === "Volcano") {
     // red for ongoing eruptions
@@ -62,6 +87,26 @@ const getIconPath = (type) => {
   if (type === "Flood") return mdiHomeFlood;
   if (type === "Drought") return mdiWaterAlert;
   if (type === "Volcano") return mdiVolcano;
+  if (
+    type === "Air Strike" ||
+    type === "Artillery Strike" ||
+    type === "UAV Attack"
+  )
+    return mdiAirplane;
+  if (type === "Firefight") return mdiPistol;
+
+  if (type === "Raid" || type === "Armor Engagement") return mdiTank;
+  if (type === "Occupation" || type === "Retreat" || type === "Loc Ops")
+    return mdiShield;
+  if (type === "Arrest" || type === "Sanctions" || type === "Control")
+    return mdiShieldCheck;
+  if (type === "IED" || type === "Cyber Attack") return mdiBomb;
+  if (type === "Military Casualty") return mdiHospitalMarker;
+
+  if (type === "Civilian Casualty") return mdiHospitalMarker;
+  if (type === "Hospital Attack") return mdiHospitalBox;
+
+  if (type === "Property Damage") return mdiFire;
   return mdiAlertCircle;
 };
 
