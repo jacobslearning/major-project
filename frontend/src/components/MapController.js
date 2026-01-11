@@ -10,7 +10,7 @@ const MapController = ({ selectedIncident }) => {
       selectedIncident.latitude &&
       selectedIncident.longitude
     ) {
-      map.flyTo([selectedIncident.latitude, selectedIncident.longitude], 6, {
+      map.flyTo([selectedIncident.latitude, selectedIncident.longitude], 15, {
         duration: 1.2,
       });
     }
