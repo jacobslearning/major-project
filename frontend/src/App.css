@@ -25,9 +25,16 @@ body {
   font-size: 20px;
 }
 
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .filters label {
-  margin-left: 12px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .filters input {
@@ -36,6 +43,23 @@ body {
   color: #fff;
   border: 1px solid #333;
   padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.reset-button {
+  background: #1a1a1a;
+  color: #00afff;
+  border: 1px solid #333;
+  padding: 4px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.reset-button:hover {
+  background: #333;
+  color: #00d1ff;
 }
 
 .app-body {

@@ -15,6 +15,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState(null);
 
+  const today = new Date().toISOString().split("T")[0];
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState(today);
+
   useEffect(() => {
     axios
       .get("http://localhost:8000/incidents/")
@@ -39,17 +43,33 @@ function App() {
     );
   }
 
+  const filteredIncidents = incidents.filter((inc) => {
+    if (!inc.date_occurred) return false;
+    const incDate = new Date(inc.date_occurred).toISOString().split("T")[0];
+    if (fromDate && incDate < fromDate) return false;
+    if (toDate && incDate > toDate) return false;
+    return true;
+  });
+
   return (
     <div className="app">
-      <Header />
+      <Header
+        fromDate={fromDate}
+        toDate={toDate}
+        setFromDate={setFromDate}
+        setToDate={setToDate}
+      />
 
       <div className="app-body">
-        <MetricsPanel incidents={incidents} />
+        <MetricsPanel incidents={filteredIncidents} />
         <RecentIncidents
-          incidents={incidents}
+          incidents={filteredIncidents}
           onSelectIncident={setSelectedIncident}
         />
-        <Map incidents={incidents} selectedIncident={selectedIncident} />
+        <Map
+          incidents={filteredIncidents}
+          selectedIncident={selectedIncident}
+        />
       </div>
     </div>
   );
