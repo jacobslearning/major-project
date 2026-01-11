@@ -122,7 +122,7 @@ const RecentIncidents = ({ incidents = [], onSelectIncident }) => {
       <h3>Recent Incidents</h3>
 
       <ul>
-        {sortedIncidents.slice(0, 15).map((inc) => {
+        {sortedIncidents.slice(0, 100).map((inc) => {
           const color = getSeverityColor(inc.type, inc.severity);
           const path = getIconPath(inc.type);
 

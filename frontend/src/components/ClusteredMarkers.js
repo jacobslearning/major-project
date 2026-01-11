@@ -180,17 +180,9 @@ export const ClusteredMarkers = ({ incidents }) => {
   const clusterRef = useRef(null);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || clusterRef.current) return;
 
-    if (clusterRef.current) {
-      map.removeLayer(clusterRef.current);
-      clusterRef.current.clearLayers();
-      clusterRef.current = null;
-    }
-
-    if (!incidents || incidents.length === 0) return;
-
-    const cluster = L.markerClusterGroup({
+    clusterRef.current = L.markerClusterGroup({
       chunkedLoading: true,
       chunkInterval: 200,
       chunkDelay: 50,
@@ -198,7 +190,23 @@ export const ClusteredMarkers = ({ incidents }) => {
       maxClusterRadius: 60,
     });
 
-    for (const inc of incidents) {
+    map.addLayer(clusterRef.current);
+
+    return () => {
+      if (clusterRef.current && map) {
+        map.removeLayer(clusterRef.current);
+        clusterRef.current = null;
+      }
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (!clusterRef.current) return;
+
+    const cluster = clusterRef.current;
+    cluster.clearLayers();
+
+    for (const inc of incidents || []) {
       if (!inc.latitude || !inc.longitude) continue;
 
       const marker = L.marker([inc.latitude, inc.longitude], {
@@ -219,17 +227,7 @@ export const ClusteredMarkers = ({ incidents }) => {
 
       cluster.addLayer(marker);
     }
-
-    clusterRef.current = cluster;
-    map.addLayer(cluster);
-
-    return () => {
-      if (clusterRef.current) {
-        map.removeLayer(clusterRef.current);
-        clusterRef.current = null;
-      }
-    };
-  }, [map, incidents]);
+  }, [incidents]);
 
   return null;
 };
