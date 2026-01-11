@@ -14,7 +14,7 @@ import {
 import { useState } from "react";
 
 const getSeverityColor = (type, severity) => {
-  if (type === "Terrorist Attack") {
+  if (type.startsWith("Terrorist Attack")) {
     if (!severity) return "blue";
 
     const killedMatch = severity.match(/killed[:\s]+(\d+)/i);
@@ -53,7 +53,7 @@ const getMarkerIcon = (type, severity) => {
   let path = mdiAlertCircle;
   if (type === "Earthquake") path = mdiTriangleWave;
   else if (type === "Wildfire") path = mdiFire;
-  else if (type === "Terrorist Attack") path = mdiBomb;
+  else if (type.startsWith("Terrorist Attack")) path = mdiBomb;
   else if (type === "Flood") path = mdiHomeFlood;
 
   const svg = `
@@ -76,6 +76,7 @@ const Map = ({
   selectedIncident,
   selectedTypes,
   setSelectedTypes,
+  allTypes,
 }) => {
   return (
     <MapContainer
@@ -88,6 +89,7 @@ const Map = ({
       <MapFilters
         selectedTypes={selectedTypes}
         setSelectedTypes={setSelectedTypes}
+        allTypes={allTypes}
       />
       {incidents.map((inc) => {
         if (!inc.latitude || !inc.longitude) return null;

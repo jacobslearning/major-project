@@ -2,9 +2,7 @@ import { useEffect } from "react";
 import L from "leaflet";
 import { useMap } from "react-leaflet";
 
-const incidentTypes = ["Earthquake", "Wildfire", "Flood", "Terrorist Attack"];
-
-const MapFilters = ({ selectedTypes, setSelectedTypes }) => {
+const MapFilters = ({ selectedTypes, setSelectedTypes, allTypes }) => {
   const map = useMap();
   useEffect(() => {
     if (!map) return;
@@ -19,7 +17,7 @@ const MapFilters = ({ selectedTypes, setSelectedTypes }) => {
 
     container.innerHTML = "<b>Filter by Type</b><br/>";
 
-    incidentTypes.forEach((type) => {
+    allTypes.forEach((type) => {
       const id = `filter-${type.replace(/\s/g, "")}`;
 
       const checkbox = document.createElement("input");

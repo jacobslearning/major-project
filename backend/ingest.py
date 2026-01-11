@@ -75,12 +75,30 @@ def map_terrorism_row_to_incident(row: pd.Series) -> Incident:
 
     severity = f"Killed {int(killed_low)}–{int(killed_high)}, Wounded {int(wounded_low)}–{int(wounded_high)}"
 
-    # remove date from title
     summary = strip_leading_date(row.get('summary') or "")
+
+    # type of attack
+    weapon = (row.get('weapon_txt') or "").lower()
+    ct_car_bomb = row.get('ct_car_bomb')
+    ct_truck_bomb = row.get('ct_truck_bomb')
+    ct_belt_bomb = row.get('ct_belt_bomb')
+
+    attack_type = "Terrorist Attack"
+
+    if ct_car_bomb == 1 or "car bomb" in weapon:
+        attack_type = "Terrorist Attack: Car Bomb"
+    elif ct_truck_bomb == 1 or "truck bomb" in weapon:
+        attack_type = "Terrorist Attack: Truck Bomb"
+    elif ct_belt_bomb == 1 or "suicide" in weapon or "vbied" in weapon:
+        attack_type = "Terrorist Attack: Suicide Bombing"
+    elif "firearm" in weapon or "gun" in weapon:
+        attack_type = "Terrorist Attack: Armed Attack"
+    elif weapon:
+        attack_type = f"Terrorist Attack: {weapon.title()}" 
 
     return Incident(
         title=summary,
-        type="Terrorist Attack",
+        type=attack_type,
         severity=severity,
         country=row.get('admin0_txt'),
         city=row.get('city_txt'),

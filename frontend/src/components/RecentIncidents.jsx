@@ -7,7 +7,7 @@ import {
 } from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
-  if (type === "Terrorist Attack") {
+  if (type.startsWith("Terrorist Attack")) {
     if (!severity) return "gray";
 
     const killedMatch = severity.match(/killed[:\s]+(\d+)/i);
@@ -43,7 +43,7 @@ const getSeverityColor = (type, severity) => {
 const getIconPath = (type) => {
   if (type === "Earthquake") return mdiTriangleWave;
   if (type === "Wildfire") return mdiFire;
-  if (type === "Terrorist Attack") return mdiBomb;
+  if (type.startsWith("Terrorist Attack")) return mdiBomb;
   if (type === "Flood") return mdiHomeFlood;
   return mdiAlertCircle;
 };

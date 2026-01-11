@@ -20,6 +20,10 @@ function App() {
   const [toDate, setToDate] = useState(today);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
+  const allIncidentTypes = Array.from(
+    new Set(incidents.map((i) => i.type).filter(Boolean))
+  ).sort();
+
   useEffect(() => {
     axios
       .get("http://localhost:8000/incidents/")
@@ -73,6 +77,7 @@ function App() {
           selectedIncident={selectedIncident}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
+          allTypes={allIncidentTypes}
         />
       </div>
     </div>
