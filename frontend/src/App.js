@@ -18,6 +18,7 @@ function App() {
   const today = new Date().toISOString().split("T")[0];
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState(today);
+  const [selectedTypes, setSelectedTypes] = useState([]);
 
   useEffect(() => {
     axios
@@ -48,6 +49,7 @@ function App() {
     const incDate = new Date(inc.date_occurred).toISOString().split("T")[0];
     if (fromDate && incDate < fromDate) return false;
     if (toDate && incDate > toDate) return false;
+    if (selectedTypes.length && !selectedTypes.includes(inc.type)) return false;
     return true;
   });
 
@@ -69,6 +71,8 @@ function App() {
         <Map
           incidents={filteredIncidents}
           selectedIncident={selectedIncident}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
         />
       </div>
     </div>

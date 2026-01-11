@@ -2,6 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import MapController from "./MapController";
+import MapFilters from "./MapFilters";
 
 import {
   mdiAlertCircle,
@@ -10,6 +11,7 @@ import {
   mdiBomb,
   mdiHomeFlood,
 } from "@mdi/js";
+import { useState } from "react";
 
 const getSeverityColor = (type, severity) => {
   if (type === "Terrorist Attack") {
@@ -69,7 +71,12 @@ const getMarkerIcon = (type, severity) => {
   });
 };
 
-const Map = ({ incidents = [], selectedIncident }) => {
+const Map = ({
+  incidents = [],
+  selectedIncident,
+  selectedTypes,
+  setSelectedTypes,
+}) => {
   return (
     <MapContainer
       center={[20, 0]}
@@ -78,6 +85,10 @@ const Map = ({ incidents = [], selectedIncident }) => {
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <MapController selectedIncident={selectedIncident} />
+      <MapFilters
+        selectedTypes={selectedTypes}
+        setSelectedTypes={setSelectedTypes}
+      />
       {incidents.map((inc) => {
         if (!inc.latitude || !inc.longitude) return null;
         return (
