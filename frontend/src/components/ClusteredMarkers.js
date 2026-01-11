@@ -1,6 +1,6 @@
 import { useMap } from "react-leaflet";
 import L from "leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   mdiAlertCircle,
   mdiFire,
@@ -90,67 +90,71 @@ const getMarkerIcon = (type, severity) => {
   const color = getSeverityColor(type, severity);
 
   let path = mdiAlertCircle;
-  switch (type) {
-    case "Earthquake":
-      path = mdiTriangleWave;
-      break;
-    case "Wildfire":
-      path = mdiFire;
-      break;
-    case "Volcano":
-      path = mdiVolcano;
-      break;
-    case "Flood":
-      path = mdiHomeFlood;
-      break;
-    case "Drought":
-      path = mdiWaterAlert;
-      break;
-    case "Terrorist Attack":
-    case "Terrorist Attack: Car Bomb":
-    case "Terrorist Attack: Suicide Bombing":
-      path = mdiBomb;
-      break;
-    case "Air Strike":
-    case "Artillery Strike":
-    case "UAV Attack":
-      path = mdiAirplane;
-      break;
-    case "Firefight":
-      path = mdiPistol;
-      break;
-    case "Raid":
-    case "Armor Engagement":
-      path = mdiTank;
-      break;
-    case "Occupation":
-    case "Retreat":
-    case "Loc Ops":
-      path = mdiShield;
-      break;
-    case "Arrest":
-    case "Sanctions":
-    case "Control":
-      path = mdiShieldCheck;
-      break;
-    case "IED":
-    case "Cyber Attack":
-      path = mdiBomb;
-      break;
-    case "Military Casualty":
-      path = mdiHospitalMarker;
-      break;
-    case "Civilian Casualty":
-      path = mdiHospitalMarker;
-      break;
-    case "Hospital Attack":
-      path = mdiHospitalBox;
-      break;
-    case "Property Damage":
-      path = mdiFire;
-      break;
-    default:
-      path = mdiAlertCircle;
+  if (type?.startsWith("Terrorist Attack")) {
+    path = mdiBomb;
+  } else {
+    switch (type) {
+      case "Earthquake":
+        path = mdiTriangleWave;
+        break;
+      case "Wildfire":
+        path = mdiFire;
+        break;
+      case "Volcano":
+        path = mdiVolcano;
+        break;
+      case "Flood":
+        path = mdiHomeFlood;
+        break;
+      case "Drought":
+        path = mdiWaterAlert;
+        break;
+      case "Terrorist Attack":
+      case "Terrorist Attack: Car Bomb":
+      case "Terrorist Attack: Suicide Bombing":
+        path = mdiBomb;
+        break;
+      case "Air Strike":
+      case "Artillery Strike":
+      case "UAV Attack":
+        path = mdiAirplane;
+        break;
+      case "Firefight":
+        path = mdiPistol;
+        break;
+      case "Raid":
+      case "Armor Engagement":
+        path = mdiTank;
+        break;
+      case "Occupation":
+      case "Retreat":
+      case "Loc Ops":
+        path = mdiShield;
+        break;
+      case "Arrest":
+      case "Sanctions":
+      case "Control":
+        path = mdiShieldCheck;
+        break;
+      case "IED":
+      case "Cyber Attack":
+        path = mdiBomb;
+        break;
+      case "Military Casualty":
+        path = mdiHospitalMarker;
+        break;
+      case "Civilian Casualty":
+        path = mdiHospitalMarker;
+        break;
+      case "Hospital Attack":
+        path = mdiHospitalBox;
+        break;
+      case "Property Damage":
+        path = mdiFire;
+        break;
+      default:
+        path = mdiAlertCircle;
+    }
   }
 
   const svg = `
@@ -173,21 +177,35 @@ const getMarkerIcon = (type, severity) => {
 
 export const ClusteredMarkers = ({ incidents }) => {
   const map = useMap();
+  const clusterRef = useRef(null);
 
   useEffect(() => {
-    if (!map || !incidents || incidents.length === 0) return;
+    if (!map) return;
 
-    map.whenReady(() => {
-      const markers = L.markerClusterGroup({ chunkedLoading: true });
+    if (clusterRef.current) {
+      map.removeLayer(clusterRef.current);
+      clusterRef.current.clearLayers();
+      clusterRef.current = null;
+    }
 
-      incidents.forEach((inc) => {
-        if (!inc.latitude || !inc.longitude) return;
+    if (!incidents || incidents.length === 0) return;
 
-        const marker = L.marker([inc.latitude, inc.longitude], {
-          icon: getMarkerIcon(inc.type, inc.severity),
-        });
+    const cluster = L.markerClusterGroup({
+      chunkedLoading: true,
+      chunkInterval: 200,
+      chunkDelay: 50,
+      removeOutsideVisibleBounds: true,
+      maxClusterRadius: 60,
+    });
 
-        const popupContent = `
+    for (const inc of incidents) {
+      if (!inc.latitude || !inc.longitude) continue;
+
+      const marker = L.marker([inc.latitude, inc.longitude], {
+        icon: getMarkerIcon(inc.type, inc.severity),
+      });
+
+      marker.bindPopup(`
         <b>${inc.title}</b><br/>
         Type: ${inc.type || "N/A"}<br/>
         Severity: ${inc.severity || "N/A"}<br/>
@@ -196,24 +214,21 @@ export const ClusteredMarkers = ({ incidents }) => {
           inc.date_occurred
             ? new Date(inc.date_occurred).toLocaleDateString()
             : "N/A"
-        }<br/>
-        ${
-          inc.source_url
-            ? `<a href="${inc.source_url}" target="_blank">Source</a>`
-            : ""
         }
-      `;
+      `);
 
-        marker.bindPopup(popupContent);
-        markers.addLayer(marker);
-      });
+      cluster.addLayer(marker);
+    }
 
-      map.addLayer(markers);
+    clusterRef.current = cluster;
+    map.addLayer(cluster);
 
-      return () => {
-        map.removeLayer(markers);
-      };
-    });
+    return () => {
+      if (clusterRef.current) {
+        map.removeLayer(clusterRef.current);
+        clusterRef.current = null;
+      }
+    };
   }, [map, incidents]);
 
   return null;

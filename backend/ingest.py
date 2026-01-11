@@ -229,7 +229,7 @@ def ingest_to_db(file_path: str, loader_func, mapper_func):
 
 
 if __name__ == "__main__":
-   # ingest_to_db("data/gdacs_rss_information.csv",load_dataset,map_earthquake_row_to_incident)
-    #ingest_to_db("data/dsat_dist_2020_10.xlsx",load_terrorism_dataset,map_terrorism_row_to_incident)
+    ingest_to_db("data/gdacs_rss_information.csv",load_dataset,map_earthquake_row_to_incident)
+    ingest_to_db("data/dsat_dist_2020_10.xlsx",load_terrorism_dataset,map_terrorism_row_to_incident)
     ingest_to_db("data/event_1pd_latest_2025.csv", load_event1pd_dataset, map_event1pd_row_to_incident)
     ingest_to_db("data/event_1pd_latest_2026.csv", load_event1pd_dataset, map_event1pd_row_to_incident)
