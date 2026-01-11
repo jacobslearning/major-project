@@ -4,6 +4,8 @@ import {
   mdiTriangleWave,
   mdiBomb,
   mdiHomeFlood,
+  mdiWaterAlert,
+  mdiVolcano,
 } from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
@@ -19,6 +21,11 @@ const getSeverityColor = (type, severity) => {
     if (killed > 0) return "red";
     if (wounded > 0) return "orange";
     return "gray";
+  }
+
+  if (type === "Volcano") {
+    // red for ongoing eruptions
+    return "red";
   }
 
   if (!severity) return "gray";
@@ -37,6 +44,14 @@ const getSeverityColor = (type, severity) => {
     return "red";
   }
 
+  if (type === "Drought") {
+    const km2 = parseFloat(severity.replace("km2", "").trim());
+    if (isNaN(km2)) return "gray";
+    if (km2 < 100000) return "green";
+    if (km2 < 500000) return "orange";
+    return "red";
+  }
+
   return "gray";
 };
 
@@ -45,16 +60,24 @@ const getIconPath = (type) => {
   if (type === "Wildfire") return mdiFire;
   if (type.startsWith("Terrorist Attack")) return mdiBomb;
   if (type === "Flood") return mdiHomeFlood;
+  if (type === "Drought") return mdiWaterAlert;
+  if (type === "Volcano") return mdiVolcano;
   return mdiAlertCircle;
 };
 
 const RecentIncidents = ({ incidents = [], onSelectIncident }) => {
+  const sortedIncidents = [...incidents].sort((a, b) => {
+    const dateA = a.date_occurred ? new Date(a.date_occurred) : new Date(0);
+    const dateB = b.date_occurred ? new Date(b.date_occurred) : new Date(0);
+    return dateB - dateA;
+  });
+
   return (
     <div className="recent">
       <h3>Recent Incidents</h3>
 
       <ul>
-        {incidents.slice(0, 15).map((inc) => {
+        {sortedIncidents.slice(0, 15).map((inc) => {
           const color = getSeverityColor(inc.type, inc.severity);
           const path = getIconPath(inc.type);
 

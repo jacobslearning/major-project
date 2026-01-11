@@ -10,8 +10,9 @@ import {
   mdiTriangleWave,
   mdiBomb,
   mdiHomeFlood,
+  mdiVolcano,
+  mdiWaterAlert,
 } from "@mdi/js";
-import { useState } from "react";
 
 const getSeverityColor = (type, severity) => {
   if (type.startsWith("Terrorist Attack")) {
@@ -26,6 +27,10 @@ const getSeverityColor = (type, severity) => {
     if (killed > 0) return "red";
     if (wounded > 0) return "orange";
     return "gray";
+  }
+  if (type === "Volcano") {
+    // red for ongoing eruptions
+    return "red";
   }
 
   if (!severity) return "gray";
@@ -44,6 +49,14 @@ const getSeverityColor = (type, severity) => {
     else return "red";
   }
 
+  if (type === "Drought") {
+    const km2 = parseFloat(severity.replace("km2", "").trim());
+    if (isNaN(km2)) return "gray";
+    if (km2 < 100000) return "green";
+    if (km2 < 500000) return "orange";
+    return "red";
+  }
+
   return "gray";
 };
 
@@ -55,6 +68,8 @@ const getMarkerIcon = (type, severity) => {
   else if (type === "Wildfire") path = mdiFire;
   else if (type.startsWith("Terrorist Attack")) path = mdiBomb;
   else if (type === "Flood") path = mdiHomeFlood;
+  else if (type === "Drought") path = mdiWaterAlert;
+  else if (type === "Volcano") path = mdiVolcano;
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
