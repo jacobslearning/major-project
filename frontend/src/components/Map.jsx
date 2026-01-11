@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import axios from "axios";
+import MapController from "./MapController";
 
 import {
   mdiAlertCircle,
@@ -24,10 +23,10 @@ const getSeverityColor = (type, severity) => {
 
     if (killed > 0) return "red";
     if (wounded > 0) return "orange";
-    return "blue";
+    return "gray";
   }
 
-  if (!severity) return "blue";
+  if (!severity) return "gray";
 
   if (type === "Earthquake") {
     const mag = parseFloat(severity.replace("M ", ""));
@@ -43,7 +42,7 @@ const getSeverityColor = (type, severity) => {
     else return "red";
   }
 
-  return "blue";
+  return "gray";
 };
 
 const getMarkerIcon = (type, severity) => {
@@ -70,73 +69,24 @@ const getMarkerIcon = (type, severity) => {
   });
 };
 
-const Map = () => {
-  const [incidents, setIncidents] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const fetchIncidents = () => {
-    setLoading(true);
-    let url = "http://localhost:8000/incidents/";
-    const params = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-
-    axios
-      .get(url, { params })
-      .then((res) => setIncidents(res.data))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchIncidents();
-  }, []); // initial load
-
-  const handleFilter = () => {
-    fetchIncidents();
-  };
-
+const Map = ({ incidents = [], selectedIncident }) => {
   return (
-    <>
-      <div style={{ marginBottom: "10px" }}>
-        <label>
-          Start Date:{" "}
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </label>
-        <label style={{ marginLeft: "10px" }}>
-          End Date:{" "}
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </label>
-        <button onClick={handleFilter} style={{ marginLeft: "10px" }}>
-          Filter
-        </button>
-      </div>
-
-      {loading && <div>Loading incidents...</div>}
-
-      <MapContainer
-        center={[20, 0]}
-        zoom={2}
-        style={{ height: "80vh", width: "100%" }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {incidents.map((inc) => (
+    <MapContainer
+      center={[20, 0]}
+      zoom={2}
+      style={{ height: "100%", width: "100%" }}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <MapController selectedIncident={selectedIncident} />
+      {incidents.map((inc) => {
+        if (!inc.latitude || !inc.longitude) return null;
+        return (
           <Marker
             key={inc.incident_id}
             position={[inc.latitude || 0, inc.longitude || 0]}
-            icon={getMarkerIcon(inc.type, inc.severity?.toLowerCase())}
+            icon={getMarkerIcon(inc.type, inc.severity)}
           >
-            <Popup>
+            <Popup maxWidth={300}>
               <b>{inc.title}</b>
               <br />
               Type: {inc.type || "N/A"} <br />
@@ -154,9 +104,9 @@ const Map = () => {
               )}
             </Popup>
           </Marker>
-        ))}
-      </MapContainer>
-    </>
+        );
+      })}
+    </MapContainer>
   );
 };
 

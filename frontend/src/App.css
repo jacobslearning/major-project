@@ -1,8 +1,129 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background: #0b0b0b;
 }
 
-h1 {
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #111;
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #222;
+}
+
+.header h1 {
   margin: 0;
+  font-size: 20px;
+}
+
+.filters label {
+  margin-left: 12px;
+  font-size: 14px;
+}
+
+.filters input {
+  margin-left: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 4px 6px;
+}
+
+.app-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 320px 1fr;
+  overflow: hidden;
+}
+
+.metrics {
+  background: #0e0e0e;
+  color: white;
+  padding: 16px;
+  border-right: 1px solid #222;
+}
+
+.metric {
+  margin-bottom: 18px;
+}
+
+.metric span:first-child {
+  display: block;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.metric span:last-child {
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.recent {
+  background: #161616;
+  color: white;
+  padding: 16px;
+  border-right: 1px solid #222;
+  overflow-y: auto;
+}
+
+.recent h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.recent ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #222;
+  cursor: pointer;
+}
+.recent-item:hover {
+  background: #36383b;
+}
+
+.recent-item:focus {
+  outline: 2px solid #36383b;
+}
+.incident-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.incident-content .title {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.recent-item small {
+  color: #888;
+}
+
+.loading-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading {
+  text-align: center;
 }
