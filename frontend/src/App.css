@@ -1,3 +1,57 @@
+.header-date {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  margin-right: 18px;
+}
+/* Navbar styles */
+
+.navbar {
+  background: #181818;
+  border-bottom: 1px solid #222;
+  padding: 0 24px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+.navbar-title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: auto;
+  letter-spacing: 0.5px;
+}
+
+.navbar-list {
+  list-style: none;
+  display: flex;
+  gap: 32px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-list li {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-list a {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 0;
+  transition: color 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.navbar-list a:hover,
+.navbar-list a:focus {
+  color: #00afff;
+  border-bottom: 2px solid #00afff;
+}
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
@@ -54,7 +108,9 @@ body {
   font-size: 14px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .reset-button:hover {
