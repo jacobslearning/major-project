@@ -6,6 +6,8 @@ from models import Incident
 from schemas import IncidentCreate, IncidentResponse
 from typing import List, Optional
 from datetime import datetime
+from fastapi.responses import FileResponse
+import os
 
 Base.metadata.create_all(bind=engine)
 
@@ -84,3 +86,17 @@ def delete_incident(incident_id: int, db: Session = Depends(get_db)):
     db.delete(incident)
     db.commit()
     return {"Info": f"Incident {incident_id} deleted"}
+
+
+@app.get("/daily-brief")
+def get_daily_brief():
+    file_path = os.path.join("data", "DailyBrief.xml")
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="DailyBrief.xml not found")
+
+    return FileResponse(
+        path=file_path,
+        media_type="application/rss+xml",
+        filename="DailyBrief.xml"
+    )
