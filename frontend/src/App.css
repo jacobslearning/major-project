@@ -1,3 +1,170 @@
+.styled-html h1, .styled-html h2, .styled-html h3, .styled-html h4 {
+  color: #ff5e5e;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 2px;
+}
+.styled-html p {
+  color: #e0e0e0;
+  font-size: 1.07rem;
+  margin: 12px 0 12px 0;
+  line-height: 1.7;
+}
+.styled-html ul, .styled-html ol {
+  margin: 12px 0 12px 24px;
+  color: #e0e0e0;
+  font-size: 1.07rem;
+}
+.styled-html li {
+  margin-bottom: 7px;
+  line-height: 1.6;
+}
+/* Daily Brief Styles */
+.daily-brief-container {
+  max-width: 820px;
+  margin: 40px auto 0 auto;
+  background: #16181c;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px 0 #000a  ;
+  padding: 36px 36px 32px 36px;
+  color: #e0e0e0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+.brief-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.brief-title {
+  font-size: 2.1rem;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.brief-subtitle {
+  color: #ff5e5e;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.brief-date {
+  color: #b0b0b0;
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+.brief-section {
+  margin-bottom: 32px;
+}
+.brief-section-title {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: #00afff;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.brief-summary {
+  font-size: 1.08rem;
+  color: #e0e0e0;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+.brief-keydev {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.brief-keydev-item {
+  display: flex;
+  align-items: flex-start;
+  background: #191b20;
+  border-left: 4px solid #ff5e5e;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 1.01rem;
+  color: #fff;
+  box-shadow: 0 1px 4px #0002;
+}
+.brief-keydev-num {
+  font-family: monospace;
+  font-size: 1.05rem;
+  color: #ff5e5e;
+  font-weight: bold;
+  margin-right: 14px;
+  min-width: 28px;
+  display: inline-block;
+}
+.brief-keydev-text {
+  flex: 1;
+  color: #e0e0e0;
+}
+.loading, .error {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #aaa;
+  margin-top: 40px;
+}
+.header-date {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  margin-right: 18px;
+}
+/* Navbar styles */
+
+.navbar {
+  background: #181818;
+  border-bottom: 1px solid #222;
+  padding: 0 24px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+.navbar-title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: auto;
+  letter-spacing: 0.5px;
+}
+
+.navbar-list {
+  list-style: none;
+  display: flex;
+  gap: 32px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-list li {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-list a {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 0;
+  transition: color 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.navbar-list a:hover,
+.navbar-list a:focus {
+  color: #00afff;
+  border-bottom: 2px solid #00afff;
+}
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
@@ -54,7 +221,9 @@ body {
   font-size: 14px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .reset-button:hover {

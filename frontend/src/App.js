@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 
 import Header from "./components/Header";
+import Navbar from "./components/Navbar";
 import MetricsPanel from "./components/Metrics";
 import RecentIncidents from "./components/RecentIncidents";
 import Map from "./components/Map";
+import DailyBrief from "./pages/DailyBrief";
+import Sources from "./pages/Sources";
+import Incidents from "./pages/Incidents";
 
 import { ThreeDot } from "react-loading-indicators";
 
@@ -24,7 +29,7 @@ function App() {
   const [selectedTypes, setSelectedTypes] = useState([]);
 
   const allIncidentTypes = Array.from(
-    new Set(incidents.map((i) => i.type).filter(Boolean))
+    new Set(incidents.map((i) => i.type).filter(Boolean)),
   ).sort();
 
   useEffect(() => {
@@ -61,29 +66,43 @@ function App() {
   });
 
   return (
-    <div className="app">
-      <Header
-        fromDate={fromDate}
-        toDate={toDate}
-        setFromDate={setFromDate}
-        setToDate={setToDate}
-      />
-
-      <div className="app-body">
-        <MetricsPanel incidents={filteredIncidents} />
-        <RecentIncidents
-          incidents={filteredIncidents}
-          onSelectIncident={setSelectedIncident}
-        />
-        <Map
-          incidents={filteredIncidents}
-          selectedIncident={selectedIncident}
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
-          allTypes={allIncidentTypes}
-        />
+    <Router>
+      <div className="app">
+        <Navbar />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Header
+                  fromDate={fromDate}
+                  toDate={toDate}
+                  setFromDate={setFromDate}
+                  setToDate={setToDate}
+                />
+                <div className="app-body">
+                  <MetricsPanel incidents={filteredIncidents} />
+                  <RecentIncidents
+                    incidents={filteredIncidents}
+                    onSelectIncident={setSelectedIncident}
+                  />
+                  <Map
+                    incidents={filteredIncidents}
+                    selectedIncident={selectedIncident}
+                    selectedTypes={selectedTypes}
+                    setSelectedTypes={setSelectedTypes}
+                    allTypes={allIncidentTypes}
+                  />
+                </div>
+              </>
+            }
+          />
+          <Route path="/daily-brief" element={<DailyBrief />} />
+          <Route path="/sources" element={<Sources />} />
+          <Route path="/incidents" element={<Incidents />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }
 

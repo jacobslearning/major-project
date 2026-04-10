@@ -1,6 +1,12 @@
 const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
   const today = new Date();
-  const todayString = today.toISOString().split("T")[0];
+  const todayString = today.toLocaleDateString("en-GB");
+  const timeString = today.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const dateTimeString = `${todayString} ${timeString}`;
 
   const twoMonthsAgo = new Date();
   twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
@@ -13,8 +19,8 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
 
   return (
     <header className="header">
-      <h1>Overseas Incident Monitoring</h1>
-
+      <div className="header-date">{dateTimeString}</div>
+      <div style={{ flex: 1 }} />
       <div className="filters">
         <label>
           From:
@@ -24,7 +30,6 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
             onChange={(e) => setFromDate(e.target.value)}
           />
         </label>
-
         <label>
           To:
           <input
