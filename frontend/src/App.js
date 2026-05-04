@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import axios from "axios";
 
 import Header from "./components/Header";
@@ -10,10 +15,13 @@ import Map from "./components/Map";
 import DailyBrief from "./pages/DailyBrief";
 import Sources from "./pages/Sources";
 import Incidents from "./pages/Incidents";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import { ThreeDot } from "react-loading-indicators";
 
 import "./App.css";
+import "./govuk-overrides.css";
 
 function App() {
   const [incidents, setIncidents] = useState([]);
@@ -65,11 +73,15 @@ function App() {
     return true;
   });
 
-  return (
-    <Router>
+  function AppContent() {
+    const location = useLocation();
+    const hideNavbar = ["/login", "/register"].includes(location.pathname);
+    return (
       <div className="app">
-        <Navbar />
+        {!hideNavbar && <Navbar />}
         <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route
             path="/"
             element={
@@ -102,6 +114,11 @@ function App() {
           <Route path="/incidents" element={<Incidents />} />
         </Routes>
       </div>
+    );
+  }
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
