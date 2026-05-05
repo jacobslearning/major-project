@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,6 +24,8 @@ import { ThreeDot } from "react-loading-indicators";
 import "./App.css";
 import "./govuk-overrides.css";
 
+const API_URL = "http://localhost:8000";
+
 export function getToken() {
   return localStorage.getItem("token");
 }
@@ -37,45 +39,86 @@ function ProtectedRoute({ children }) {
   if (!getToken()) return <Navigate to="/login" replace />;
   return children;
 }
+// debounce hook taken from w3schools
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
 
-  const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(!isAuthPage);
-  const [selectedIncident, setSelectedIncident] = useState(null);
-
   const today = new Date().toISOString().split("T")[0];
   const twoMonthsAgo = new Date();
   twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+
   const [fromDate, setFromDate] = useState(
     twoMonthsAgo.toISOString().split("T")[0],
   );
   const [toDate, setToDate] = useState(today);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
-  const allIncidentTypes = Array.from(
-    new Set(incidents.map((i) => i.type).filter(Boolean)),
-  ).sort();
+  const [incidents, setIncidents] = useState([]);
+  const [allIncidentTypes, setAllIncidentTypes] = useState([]);
+  const [loading, setLoading] = useState(!isAuthPage);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+
+  const debouncedFrom = useDebounce(fromDate, 600);
+  const debouncedTo = useDebounce(toDate, 600);
+
+  const cancelRef = useRef(null);
+
+  const fetchIncidents = useCallback(async (from, to) => {
+    if (!getToken()) return;
+
+    if (cancelRef.current) cancelRef.current.abort();
+    const controller = new AbortController();
+    cancelRef.current = controller;
+
+    setFetchingMore(true);
+    try {
+      const params = new URLSearchParams();
+      if (from) params.append("start_date", from);
+      if (to) params.append("end_date", to);
+
+      const res = await axios.get(`${API_URL}/incidents/?${params}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+        signal: controller.signal,
+      });
+
+      const data = res.data;
+      setIncidents(data);
+
+      setAllIncidentTypes(
+        Array.from(new Set(data.map((i) => i.type).filter(Boolean))).sort(),
+      );
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error(err);
+      if (err.response?.status === 401) logout();
+    } finally {
+      setFetchingMore(false);
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (isAuthPage || !getToken()) {
+    if (isAuthPage) {
       setLoading(false);
       return;
     }
+    fetchIncidents(debouncedFrom, debouncedTo);
+  }, [isAuthPage, debouncedFrom, debouncedTo, fetchIncidents]);
 
-    axios
-      .get("http://localhost:8000/incidents/", {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      })
-      .then((res) => setIncidents(res.data))
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.status === 401) logout();
-      })
-      .finally(() => setLoading(false));
-  }, [isAuthPage]);
+  const filteredIncidents = selectedTypes.length
+    ? incidents.filter((inc) => selectedTypes.includes(inc.type))
+    : incidents;
 
   if (loading) {
     return (
@@ -92,15 +135,6 @@ function AppContent() {
       </div>
     );
   }
-
-  const filteredIncidents = incidents.filter((inc) => {
-    if (!inc.date_occurred) return false;
-    const incDate = new Date(inc.date_occurred).toISOString().split("T")[0];
-    if (fromDate && incDate < fromDate) return false;
-    if (toDate && incDate > toDate) return false;
-    if (selectedTypes.length && !selectedTypes.includes(inc.type)) return false;
-    return true;
-  });
 
   return (
     <div className="app">
@@ -120,6 +154,21 @@ function AppContent() {
                   setFromDate={setFromDate}
                   setToDate={setToDate}
                 />
+                {fetchingMore && (
+                  <div
+                    style={{
+                      height: 3,
+                      background:
+                        "linear-gradient(90deg, #00afff 0%, #0077cc 100%)",
+                      animation: "pulse 1.2s ease-in-out infinite",
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      zIndex: 9999,
+                    }}
+                  />
+                )}
                 <div className="app-body">
                   <MetricsPanel incidents={filteredIncidents} />
                   <RecentIncidents

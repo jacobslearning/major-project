@@ -19,57 +19,38 @@ import {
 } from "@mdi/js";
 
 const getSeverityColor = (type, severity) => {
-  if (type.startsWith("Terrorist Attack")) {
+  if (type?.startsWith("Terrorist Attack")) {
     if (!severity) return "blue";
-
-    const killedMatch = severity.match(/killed[:\s]+(\d+)/i);
-    const woundedMatch = severity.match(/wounded[:\s]+(\d+)/i);
-
-    const killed = killedMatch ? parseInt(killedMatch[1]) : 0;
-    const wounded = woundedMatch ? parseInt(woundedMatch[1]) : 0;
-
+    const killed = parseInt(severity.match(/killed[:\s]+(\d+)/i)?.[1] ?? 0);
+    const wounded = parseInt(severity.match(/wounded[:\s]+(\d+)/i)?.[1] ?? 0);
     if (killed > 0) return "red";
     if (wounded > 0) return "orange";
     return "gray";
   }
-  if (
-    type === "Air Strike" ||
-    type === "Artillery Strike" ||
-    type === "UAV Attack"
-  )
+  if (["Air Strike", "Artillery Strike", "UAV Attack"].includes(type))
     return "red";
-  if (type === "Firefight" || type === "Raid" || type === "Armor Engagement")
-    return "orange";
-  if (type === "Occupation" || type === "Retreat" || type === "Loc Ops")
-    return "blue";
-  if (type === "Arrest" || type === "Sanctions" || type === "Control")
-    return "purple";
-  if (type === "IED" || type === "Cyber Attack") return "black";
+  if (["Firefight", "Raid", "Armor Engagement"].includes(type)) return "orange";
+  if (["Occupation", "Retreat", "Loc Ops"].includes(type)) return "blue";
+  if (["Arrest", "Sanctions", "Control"].includes(type)) return "purple";
+  if (["IED", "Cyber Attack"].includes(type)) return "black";
   if (type === "Military Casualty") return "darkred";
   if (type === "Civilian Casualty") return "darkorange";
   if (type === "Hospital Attack") return "pink";
   if (type === "Property Damage") return "brown";
-  if (type === "Volcano") {
-    // red for ongoing eruptions
-    return "red";
-  }
-
+  if (type === "Volcano") return "red";
   if (!severity) return "gray";
-
   if (type === "Earthquake") {
     const mag = parseFloat(severity.replace("M ", ""));
     if (mag < 4.0) return "green";
-    else if (mag < 6.0) return "orange";
-    else return "red";
+    if (mag < 6.0) return "orange";
+    return "red";
   }
-
   if (type === "Wildfire") {
     const ha = parseFloat(severity.replace("ha ", ""));
     if (ha < 1000) return "green";
-    else if (ha < 10000) return "orange";
-    else return "red";
+    if (ha < 10000) return "orange";
+    return "red";
   }
-
   if (type === "Drought") {
     const km2 = parseFloat(severity.replace("km2", "").trim());
     if (isNaN(km2)) return "gray";
@@ -77,7 +58,6 @@ const getSeverityColor = (type, severity) => {
     if (km2 < 500000) return "orange";
     return "red";
   }
-
   return "gray";
 };
 
@@ -88,8 +68,8 @@ const getMarkerIcon = (type, severity) => {
   if (iconCache[key]) return iconCache[key];
 
   const color = getSeverityColor(type, severity);
-
   let path = mdiAlertCircle;
+
   if (type?.startsWith("Terrorist Attack")) {
     path = mdiBomb;
   } else {
@@ -108,11 +88,6 @@ const getMarkerIcon = (type, severity) => {
         break;
       case "Drought":
         path = mdiWaterAlert;
-        break;
-      case "Terrorist Attack":
-      case "Terrorist Attack: Car Bomb":
-      case "Terrorist Attack: Suicide Bombing":
-        path = mdiBomb;
         break;
       case "Air Strike":
       case "Artillery Strike":
@@ -141,8 +116,6 @@ const getMarkerIcon = (type, severity) => {
         path = mdiBomb;
         break;
       case "Military Casualty":
-        path = mdiHospitalMarker;
-        break;
       case "Civilian Casualty":
         path = mdiHospitalMarker;
         break;
@@ -157,11 +130,9 @@ const getMarkerIcon = (type, severity) => {
     }
   }
 
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
-      <path fill="${color}" d="${path}" />
-    </svg>
-  `;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+    <path fill="${color}" d="${path}" />
+  </svg>`;
 
   const icon = L.divIcon({
     html: svg,
@@ -175,17 +146,20 @@ const getMarkerIcon = (type, severity) => {
   return icon;
 };
 
+const BATCH_SIZE = 200;
+
 export const ClusteredMarkers = ({ incidents }) => {
   const map = useMap();
   const clusterRef = useRef(null);
+  const batchTimerRef = useRef(null);
 
   useEffect(() => {
     if (!map || clusterRef.current) return;
 
     clusterRef.current = L.markerClusterGroup({
       chunkedLoading: true,
-      chunkInterval: 200,
-      chunkDelay: 50,
+      chunkInterval: 100,
+      chunkDelay: 30,
       removeOutsideVisibleBounds: true,
       maxClusterRadius: 60,
     });
@@ -203,16 +177,24 @@ export const ClusteredMarkers = ({ incidents }) => {
   useEffect(() => {
     if (!clusterRef.current) return;
 
+    if (batchTimerRef.current) {
+      cancelAnimationFrame(batchTimerRef.current);
+      batchTimerRef.current = null;
+    }
+
     const cluster = clusterRef.current;
     cluster.clearLayers();
 
-    for (const inc of incidents || []) {
-      if (!inc.latitude || !inc.longitude) continue;
+    const valid = (incidents || []).filter(
+      (inc) => inc.latitude && inc.longitude,
+    );
 
+    if (valid.length === 0) return;
+
+    const markers = valid.map((inc) => {
       const marker = L.marker([inc.latitude, inc.longitude], {
         icon: getMarkerIcon(inc.type, inc.severity),
       });
-
       marker.bindPopup(`
         <b>${inc.title}</b><br/>
         Type: ${inc.type || "N/A"}<br/>
@@ -224,9 +206,24 @@ export const ClusteredMarkers = ({ incidents }) => {
             : "N/A"
         }
       `);
+      return marker;
+    });
 
-      cluster.addLayer(marker);
-    }
+    let offset = 0;
+    const addBatch = () => {
+      const batch = markers.slice(offset, offset + BATCH_SIZE);
+      cluster.addLayers(batch);
+      offset += BATCH_SIZE;
+      if (offset < markers.length) {
+        batchTimerRef.current = requestAnimationFrame(addBatch);
+      }
+    };
+
+    batchTimerRef.current = requestAnimationFrame(addBatch);
+
+    return () => {
+      if (batchTimerRef.current) cancelAnimationFrame(batchTimerRef.current);
+    };
   }, [incidents]);
 
   return null;

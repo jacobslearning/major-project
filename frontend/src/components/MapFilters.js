@@ -1,64 +1,123 @@
-import { useEffect } from "react";
-import L from "leaflet";
 import { useMap } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import L from "leaflet";
 
 const MapFilters = ({ selectedTypes, setSelectedTypes, allTypes }) => {
   const map = useMap();
+  const containerRef = useRef(null);
+  const controlRef = useRef(null);
+
   useEffect(() => {
     if (!map) return;
-    // have to do it within the DOMUtil bit of leaflet to have it on the map itself
 
-    const container = L.DomUtil.create("div", "map-filter-control leaflet-bar");
+    const div = L.DomUtil.create("div", "map-filter-control leaflet-bar");
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.disableScrollPropagation(div);
 
-    container.style.background = "#1a1a1a";
-    container.style.padding = "8px";
-    container.style.borderRadius = "4px";
-    container.style.color = "#fff";
-    container.style.maxHeight = "300px";
-    container.style.overflowY = "auto";
-    container.style.width = "200px";
-    container.innerHTML = "<b>Filter by Type</b><br/>";
+    const control = L.control({ position: "topright" });
+    control.onAdd = () => div;
+    control.addTo(map);
 
-    allTypes.forEach((type) => {
-      const id = `filter-${type.replace(/\s/g, "")}`;
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = id;
-      checkbox.checked = selectedTypes.includes(type);
-
-      checkbox.onchange = () => {
-        if (checkbox.checked) {
-          setSelectedTypes([...selectedTypes, type]);
-        } else {
-          setSelectedTypes(selectedTypes.filter((t) => t !== type));
-        }
-      };
-
-      const label = document.createElement("label");
-      label.htmlFor = id;
-      label.style.marginRight = "8px";
-      label.style.display = "block";
-      label.style.cursor = "pointer";
-      label.innerText = type;
-
-      label.prepend(checkbox);
-      container.appendChild(label);
-    });
-
-    const filterControl = L.control({ position: "topright" });
-    filterControl.onAdd = () => container;
-    filterControl.addTo(map);
-
-    L.DomEvent.disableClickPropagation(container);
-    L.DomEvent.disableScrollPropagation(container);
+    containerRef.current = div;
+    controlRef.current = control;
 
     return () => {
-      filterControl.remove();
+      control.remove();
+      containerRef.current = null;
+      controlRef.current = null;
     };
-  }, [map, selectedTypes, setSelectedTypes]);
+  }, [map]);
 
-  return null;
+  if (!containerRef.current) return null;
+
+  return createPortal(
+    <FilterPanel
+      allTypes={allTypes}
+      selectedTypes={selectedTypes}
+      setSelectedTypes={setSelectedTypes}
+    />,
+    containerRef.current,
+  );
+};
+
+const FilterPanel = ({ allTypes, selectedTypes, setSelectedTypes }) => {
+  const toggle = (type) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
+  };
+
+  const allSelected = selectedTypes.length === 0;
+
+  return (
+    <div
+      style={{
+        background: "#1a1a1a",
+        padding: "8px",
+        borderRadius: "4px",
+        color: "#fff",
+        maxHeight: "300px",
+        overflowY: "auto",
+        width: "200px",
+        fontSize: "0.85rem",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 6,
+        }}
+      >
+        <b>Filter by Type</b>
+        {!allSelected && (
+          <button
+            onClick={() => setSelectedTypes([])}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#00afff",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+              padding: 0,
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {allTypes.length === 0 && (
+        <div style={{ color: "#888", fontStyle: "italic" }}>Loading…</div>
+      )}
+
+      {allTypes.map((type) => {
+        const checked = selectedTypes.includes(type);
+        return (
+          <label
+            key={type}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+              padding: "2px 0",
+              color: checked ? "#fff" : "#aaa",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={() => toggle(type)}
+              style={{ cursor: "pointer" }}
+            />
+            {type}
+          </label>
+        );
+      })}
+    </div>
+  );
 };
 
 export default MapFilters;

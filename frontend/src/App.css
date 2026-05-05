@@ -27,7 +27,7 @@
   margin-bottom: 7px;
   line-height: 1.6;
 }
-/* Daily Brief Styles */
+
 .daily-brief-container {
   max-width: 820px;
   margin: 40px auto 0 auto;
@@ -333,7 +333,6 @@ body {
 .map-filter-control {
   font-size: 12px;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
-  max-width: 150px;
 }
 .map-filter-control label {
   user-select: none;
