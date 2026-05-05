@@ -1,4 +1,7 @@
-.styled-html h1, .styled-html h2, .styled-html h3, .styled-html h4 {
+.styled-html h1,
+.styled-html h2,
+.styled-html h3,
+.styled-html h4 {
   color: #ff5e5e;
   font-size: 1.15rem;
   font-weight: 600;
@@ -14,7 +17,8 @@
   margin: 12px 0 12px 0;
   line-height: 1.7;
 }
-.styled-html ul, .styled-html ol {
+.styled-html ul,
+.styled-html ol {
   margin: 12px 0 12px 24px;
   color: #e0e0e0;
   font-size: 1.07rem;
@@ -29,7 +33,7 @@
   margin: 40px auto 0 auto;
   background: #16181c;
   border-radius: 12px;
-  box-shadow: 0 2px 16px 0 #000a  ;
+  box-shadow: 0 2px 16px 0 #000a;
   padding: 36px 36px 32px 36px;
   color: #e0e0e0;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
@@ -105,7 +109,8 @@
   flex: 1;
   color: #e0e0e0;
 }
-.loading, .error {
+.loading,
+.error {
   text-align: center;
   font-size: 1.1rem;
   color: #aaa;
@@ -117,7 +122,11 @@
   font-weight: 500;
   margin-right: 18px;
 }
-/* Navbar styles */
+.header-welcome {
+  color: #00afff;
+  font-size: 16px;
+  font-weight: 500;
+}
 
 .navbar {
   background: #181818;

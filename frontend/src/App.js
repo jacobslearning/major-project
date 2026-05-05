@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import axios from "axios";
@@ -23,16 +24,34 @@ import { ThreeDot } from "react-loading-indicators";
 import "./App.css";
 import "./govuk-overrides.css";
 
-function App() {
+export function getToken() {
+  return localStorage.getItem("token");
+}
+
+export function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+}
+
+function ProtectedRoute({ children }) {
+  if (!getToken()) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AppContent() {
+  const location = useLocation();
+  const isAuthPage = ["/login", "/register"].includes(location.pathname);
+
   const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isAuthPage);
   const [selectedIncident, setSelectedIncident] = useState(null);
 
   const today = new Date().toISOString().split("T")[0];
   const twoMonthsAgo = new Date();
   twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-  const twoMonthsAgoString = twoMonthsAgo.toISOString().split("T")[0];
-  const [fromDate, setFromDate] = useState(twoMonthsAgoString);
+  const [fromDate, setFromDate] = useState(
+    twoMonthsAgo.toISOString().split("T")[0],
+  );
   const [toDate, setToDate] = useState(today);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
@@ -41,12 +60,22 @@ function App() {
   ).sort();
 
   useEffect(() => {
+    if (isAuthPage || !getToken()) {
+      setLoading(false);
+      return;
+    }
+
     axios
-      .get("http://localhost:8000/incidents/")
+      .get("http://localhost:8000/incidents/", {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      })
       .then((res) => setIncidents(res.data))
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        if (err.response?.status === 401) logout();
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [isAuthPage]);
 
   if (loading) {
     return (
@@ -73,18 +102,17 @@ function App() {
     return true;
   });
 
-  function AppContent() {
-    const location = useLocation();
-    const hideNavbar = ["/login", "/register"].includes(location.pathname);
-    return (
-      <div className="app">
-        {!hideNavbar && <Navbar />}
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/"
-            element={
+  return (
+    <div className="app">
+      {!isAuthPage && <Navbar onLogout={logout} />}
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
               <>
                 <Header
                   fromDate={fromDate}
@@ -107,15 +135,39 @@ function App() {
                   />
                 </div>
               </>
-            }
-          />
-          <Route path="/daily-brief" element={<DailyBrief />} />
-          <Route path="/sources" element={<Sources />} />
-          <Route path="/incidents" element={<Incidents />} />
-        </Routes>
-      </div>
-    );
-  }
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/daily-brief"
+          element={
+            <ProtectedRoute>
+              <DailyBrief />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sources"
+          element={
+            <ProtectedRoute>
+              <Sources />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/incidents"
+          element={
+            <ProtectedRoute>
+              <Incidents />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
+}
+
+function App() {
   return (
     <Router>
       <AppContent />

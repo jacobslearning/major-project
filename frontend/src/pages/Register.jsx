@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../App.css";
 import {
   isValidEmail,
@@ -7,24 +9,37 @@ import {
 } from "../utils/validation";
 
 const Register = () => {
+  const navigate = useNavigate();
+
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [usernameError, setUsernameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
+  const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const passwordRules = getPasswordRules(password);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setUsernameError("");
     setEmailError("");
     setPasswordError("");
     setConfirmError("");
+    setApiError("");
 
     let valid = true;
+
+    if (!username.trim()) {
+      setUsernameError("Enter a username.");
+      valid = false;
+    }
 
     if (!isValidEmail(email)) {
       setEmailError("Enter a valid email address.");
@@ -43,7 +58,27 @@ const Register = () => {
 
     if (!valid) return;
 
-    alert("Registration submitted (API call placeholder)");
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:8000/register", {
+        username,
+        email,
+        password,
+      });
+
+      navigate("/login", { state: { registered: true } });
+    } catch (err) {
+      const msg = err.response?.data?.detail;
+      if (typeof msg === "string") {
+        if (msg.toLowerCase().includes("username")) setUsernameError(msg);
+        else if (msg.toLowerCase().includes("email")) setEmailError(msg);
+        else setApiError(msg);
+      } else {
+        setApiError("Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const ruleItem = (label, isValid) => (
@@ -66,18 +101,41 @@ const Register = () => {
         <h2 className="govuk-heading-2" style={{ marginBottom: 8 }}>
           Overseas Incident Monitoring
         </h2>
-
         <h1 className="govuk-heading-l" style={{ marginTop: 0 }}>
           Register
         </h1>
       </div>
 
+      {apiError && (
+        <div className="govuk-error-summary" role="alert">
+          <p className="govuk-error-message" style={{ marginBottom: 0 }}>
+            {apiError}
+          </p>
+        </div>
+      )}
+
       <form className="govuk-form-group" onSubmit={handleSubmit}>
         <div className="govuk-form-group">
+          <label className="govuk-label" htmlFor="username">
+            Username
+          </label>
+          <input
+            className={`govuk-input ${usernameError ? "govuk-input--error" : ""}`}
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ width: "95%" }}
+          />
+          {usernameError && (
+            <p className="govuk-error-message">{usernameError}</p>
+          )}
+        </div>
+
+        <div className="govuk-form-group" style={{ marginTop: 16 }}>
           <label className="govuk-label" htmlFor="email">
             Email address
           </label>
-
           <input
             className={`govuk-input ${emailError ? "govuk-input--error" : ""}`}
             id="email"
@@ -86,7 +144,6 @@ const Register = () => {
             onChange={(e) => setEmail(e.target.value)}
             style={{ width: "95%" }}
           />
-
           {emailError && <p className="govuk-error-message">{emailError}</p>}
         </div>
 
@@ -94,18 +151,14 @@ const Register = () => {
           <label className="govuk-label" htmlFor="password">
             Password
           </label>
-
           <input
-            className={`govuk-input ${
-              passwordError ? "govuk-input--error" : ""
-            }`}
+            className={`govuk-input ${passwordError ? "govuk-input--error" : ""}`}
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={{ width: "95%" }}
           />
-
           <ul
             style={{
               listStyle: "none",
@@ -120,7 +173,6 @@ const Register = () => {
             {ruleItem("One number", passwordRules.number)}
             {ruleItem("One special character", passwordRules.special)}
           </ul>
-
           {passwordError && (
             <p className="govuk-error-message">{passwordError}</p>
           )}
@@ -130,25 +182,21 @@ const Register = () => {
           <label className="govuk-label" htmlFor="confirmPassword">
             Confirm password
           </label>
-
           <input
-            className={`govuk-input ${
-              confirmError ? "govuk-input--error" : ""
-            }`}
+            className={`govuk-input ${confirmError ? "govuk-input--error" : ""}`}
             id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             style={{ width: "95%" }}
           />
-
           {confirmError && (
             <p className="govuk-error-message">{confirmError}</p>
           )}
         </div>
 
-        <button className="govuk-button" type="submit">
-          Register
+        <button className="govuk-button" type="submit" disabled={loading}>
+          {loading ? "Registering…" : "Register"}
         </button>
       </form>
 

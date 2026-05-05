@@ -1,3 +1,5 @@
+import { getUsername } from "../utils/authHelpers";
+
 const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
   const today = new Date();
   const todayString = today.toLocaleDateString("en-GB");
@@ -17,9 +19,12 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
     setToDate(todayString);
   };
 
+  const username = getUsername();
+
   return (
     <header className="header">
       <div className="header-date">{dateTimeString}</div>
+      {username && <div className="header-welcome">Welcome, {username}!</div>}
       <div style={{ flex: 1 }} />
       <div className="filters">
         <label>
