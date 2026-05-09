@@ -18,6 +18,7 @@ import Sources from "./pages/Sources";
 import Incidents from "./pages/Incidents";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import LiveFeed from "./pages/LiveFeed";
 
 import { ThreeDot } from "react-loading-indicators";
 
@@ -208,6 +209,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Incidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/live-feed"
+          element={
+            <ProtectedRoute>
+              <LiveFeed />
             </ProtectedRoute>
           }
         />

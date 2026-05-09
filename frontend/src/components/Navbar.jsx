@@ -13,6 +13,9 @@ const Navbar = () => {
           <Link to="/daily-brief">Daily Brief</Link>
         </li>
         <li>
+          <Link to="/live-feed">Live Feed</Link>
+        </li>
+        <li>
           <Link to="/sources">Sources</Link>
         </li>
         <li>
