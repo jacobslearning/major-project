@@ -9,3 +9,5 @@ openpyxl
 python-jose[cryptography]
 bcrypt
 python-multipart
+pytest
+httpx

@@ -6,5 +6,7 @@ venv/
 .env/
 
 *.log
-
+.pytest_cache/
+.ruff_cache/
+test_incidents.db
 .DS_Store

@@ -28,6 +28,12 @@ def strip_leading_date(text: str) -> str:
         return text
     return re.sub(r"^\d{1,2}/\d{1,2}/\d{4}:\s*", "", text)
 
+def strip_string_columns(df: pd.DataFrame) -> pd.DataFrame:
+    for col in df.select_dtypes(include=["object", "string"]).columns:
+        df[col] = df[col].map(
+            lambda value: value.strip() if isinstance(value, str) else value
+        )
+    return df
 
 def load_terrorism_dataset(file_path: str) -> pd.DataFrame:
     df = pd.read_excel(file_path, dtype=str)
@@ -49,10 +55,7 @@ def load_terrorism_dataset(file_path: str) -> pd.DataFrame:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    for col in df.columns:
-        if df[col].dtype == "object":
-            df[col] = df[col].str.strip()
-
+    df = strip_string_columns(df)
     df = df.dropna(subset=["summary", "latitude", "longitude"])
 
     return df
@@ -115,9 +118,7 @@ def load_dataset(file_path: str) -> pd.DataFrame:
     df["geo_long"] = pd.to_numeric(df.get("geo_long"), errors="coerce")
     df["severity_value"] = pd.to_numeric(df.get("severity_value"), errors="coerce")
 
-    for col in df.columns:
-        if df[col].dtype == "object":
-            df[col] = df[col].str.strip()
+    df = strip_string_columns(df)
     df = df.dropna(subset=["title"])
     return df
 
