@@ -279,7 +279,27 @@ if __name__ == "__main__":
         map_event1pd_row_to_incident,
     )
     ingest_to_db(
-        "data/event_1pd_latest_2026.csv",
+        "data/event_1pd_latest_2026_jan.csv",
+        load_event1pd_dataset,
+        map_event1pd_row_to_incident,
+    )
+    ingest_to_db(
+        "data/event_1pd_latest_2026_feb.csv",
+        load_event1pd_dataset,
+        map_event1pd_row_to_incident,
+    )
+    ingest_to_db(
+        "data/event_1pd_latest_2026_mar.csv",
+        load_event1pd_dataset,
+        map_event1pd_row_to_incident,
+    )
+    ingest_to_db(
+        "data/event_1pd_latest_2026_apr.csv",
+        load_event1pd_dataset,
+        map_event1pd_row_to_incident,
+    )
+    ingest_to_db(
+        "data/event_1pd_latest_2026_may.csv",
         load_event1pd_dataset,
         map_event1pd_row_to_incident,
     )
