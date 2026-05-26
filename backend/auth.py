@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Optional
- 
+
 import bcrypt
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
- 
+
 from database import SessionLocal
 from models import User
 from schemas import TokenData
@@ -28,11 +28,11 @@ def get_db():
 
 
 def hash_password(plain: str) -> str:
-    return bcrypt.hashpw(plain.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

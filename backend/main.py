@@ -6,16 +6,22 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
 import os
- 
-from database import SessionLocal, engine, Base
+
+from database import engine, Base
 from models import Incident, User
 from schemas import (
-    IncidentCreate, IncidentResponse,
-    UserCreate, UserResponse, Token,
+    IncidentCreate,
+    IncidentResponse,
+    UserCreate,
+    UserResponse,
+    Token,
 )
 from auth import (
-    get_db, hash_password, authenticate_user,
-    create_access_token, get_current_user,
+    get_db,
+    hash_password,
+    authenticate_user,
+    create_access_token,
+    get_current_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
@@ -31,10 +37,10 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,     
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],    
+    allow_headers=["*"],
 )
 
 
@@ -44,7 +50,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username already taken")
     if db.query(User).filter(User.email == user_in.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
- 
+
     new_user = User(
         username=user_in.username,
         email=user_in.email,
@@ -54,10 +60,12 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
- 
- 
+
+
 @app.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -70,27 +78,35 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return {"access_token": token, "token_type": "bearer"}
- 
- 
+
+
 @app.get("/me", response_model=UserResponse)
 def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 
 @app.post("/incidents/", response_model=IncidentResponse)
-def create_incident(incident: IncidentCreate, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def create_incident(
+    incident: IncidentCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     db_incident = Incident(**incident.dict())
     db.add(db_incident)
     db.commit()
     db.refresh(db_incident)
     return db_incident
 
+
 # all incidents
+
+
 @app.get("/incidents/", response_model=List[IncidentResponse])
 def list_incidents(
     start_date: Optional[datetime] = Query(None, description="Start date YYYY-MM-DD"),
     end_date: Optional[datetime] = Query(None, description="End date YYYY-MM-DD"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
 ):
     query = db.query(Incident)
 
@@ -103,6 +119,7 @@ def list_incidents(
 
     return query.all()
 
+
 @app.get("/incidents/{incident_id}", response_model=IncidentResponse)
 def get_incident(incident_id: int, db: Session = Depends(get_db)):
     incident = db.query(Incident).filter(Incident.incident_id == incident_id).first()
@@ -110,21 +127,30 @@ def get_incident(incident_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Incident not found")
     return incident
 
+
 @app.put("/incidents/{incident_id}", response_model=IncidentResponse)
-def update_incident(incident_id: int, updated: IncidentCreate, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def update_incident(
+    incident_id: int,
+    updated: IncidentCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     incident = db.query(Incident).filter(Incident.incident_id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
+
     for key, value in updated.dict().items():
         setattr(incident, key, value)
-    
+
     db.commit()
     db.refresh(incident)
     return incident
 
+
 @app.delete("/incidents/{incident_id}")
-def delete_incident(incident_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def delete_incident(
+    incident_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)
+):
     incident = db.query(Incident).filter(Incident.incident_id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -141,7 +167,5 @@ def get_daily_brief():
         raise HTTPException(status_code=404, detail="DailyBrief.xml not found")
 
     return FileResponse(
-        path=file_path,
-        media_type="application/rss+xml",
-        filename="DailyBrief.xml"
+        path=file_path, media_type="application/rss+xml", filename="DailyBrief.xml"
     )

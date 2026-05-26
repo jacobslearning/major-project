@@ -1,6 +1,7 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+
 
 class IncidentCreate(BaseModel):
     title: str
@@ -12,6 +13,7 @@ class IncidentCreate(BaseModel):
     longitude: Optional[float] = None
     date_occurred: Optional[datetime] = None
     source_url: Optional[str] = None
+
 
 class IncidentResponse(BaseModel):
     incident_id: int
@@ -26,12 +28,14 @@ class IncidentResponse(BaseModel):
     source_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
- 
- 
+
+
 class UserResponse(BaseModel):
     id: int
     username: str
@@ -39,12 +43,12 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
- 
- 
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
- 
- 
+
+
 class TokenData(BaseModel):
     username: Optional[str] = None
