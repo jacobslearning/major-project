@@ -135,6 +135,7 @@
   height: 54px;
   display: flex;
   align-items: center;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
   justify-content: space-between;
   z-index: 10;
 }
@@ -143,6 +144,7 @@
   font-size: 20px;
   font-weight: bold;
   margin-left: auto;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
   letter-spacing: 0.5px;
 }
 
@@ -252,6 +254,10 @@ body {
   color: white;
   padding: 16px;
   border-right: 1px solid #222;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .metric {
@@ -260,7 +266,7 @@ body {
 
 .metric span:first-child {
   display: block;
-  font-size: 13px;
+  font-size: 11px;
   color: #aaa;
 }
 

@@ -47,7 +47,7 @@ def test_terrorism_excel_loader_loads_and_cleans_rows(tmp_path):
     assert row["killed_high"] == pytest.approx(5)
 
 
-def test_terrorism_loader_removes_rows_missing_latitude_or_longitude(tmp_path):
+def test_terrorism_loader_removes_rows_missing_coordinates(tmp_path):
     source_file = tmp_path / "terrorism_missing_coords.xlsx"
     pd.DataFrame(
         [
@@ -62,7 +62,7 @@ def test_terrorism_loader_removes_rows_missing_latitude_or_longitude(tmp_path):
     assert df["summary"].tolist() == ["Valid"]
 
 
-def test_event1pd_csv_loader_converts_coordinates_and_integer_flags(tmp_path):
+def test_event1pd_csv_loader_converts_coordinates(tmp_path):
     source_file = tmp_path / "event1pd.csv"
     pd.DataFrame(
         [

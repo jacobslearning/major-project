@@ -19,7 +19,7 @@ def test_ingest_to_db_commits_transformed_incident(db_session):
                     "geo_lat": 35.6762,
                     "geo_long": 139.6503,
                     "from_date": datetime(2026, 1, 15, 10, 0, 0),
-                    "link": "https://example.test/earthquake",
+                    "link": "https://earthquake.com",
                 }
             ]
         )
@@ -33,3 +33,4 @@ def test_ingest_to_db_commits_transformed_incident(db_session):
     assert incidents[0].severity == "Magnitude 5.7"
     assert incidents[0].latitude == 35.6762
     assert incidents[0].longitude == 139.6503
+
