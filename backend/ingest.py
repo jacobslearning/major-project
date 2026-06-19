@@ -6,8 +6,9 @@ from urllib.parse import urlparse
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from auth import hash_password
 from database import SessionLocal
-from models import Incident, IncidentType, Source
+from models import Incident, IncidentType, Role, Source, User
 
 
 IncidentPayload = dict[str, Any]
@@ -457,6 +458,7 @@ def map_event1pd_row_to_incident(row: pd.Series) -> IncidentPayload:
     }
 
 
+
 def ingest_to_db(
     file_path: str,
     loader_func: Callable[[str], pd.DataFrame],
@@ -497,8 +499,79 @@ def ingest_to_db(
     finally:
         session.close()
 
+def get_or_create_role(
+    session: Session,
+    role_name: str,
+    description: Optional[str] = None,
+) -> Role:
+    role = session.query(Role).filter(Role.role_name == role_name).one_or_none()
+
+    if role:
+        if description and not role.description:
+            role.description = description
+        return role
+
+    role = Role(role_name=role_name, description=description)
+    session.add(role)
+    session.flush()
+    return role
+
+
+def create_administrator_user() -> None:
+
+    session: Session = SessionLocal()
+
+    try:
+        administrator_role = get_or_create_role(
+            session,
+            "administrator",
+            "Administrator role with full user and system management access.",
+        )
+
+        get_or_create_role(
+            session,
+            "analyst",
+            "Default analyst role for standard users.",
+        )
+
+        existing_user = (
+            session.query(User)
+            .filter((User.username == "admin") | (User.email == "admin@gmail.com"))
+            .one_or_none()
+        )
+
+        if existing_user:
+            existing_user.role_id = administrator_role.role_id
+            existing_user.is_active = True
+            session.commit()
+            return
+
+        admin_user = User(
+            username="admin",
+            email="admin@gmail.com",
+            password_hash=hash_password("Admin1!@"),
+            role_id=administrator_role.role_id,
+            is_active=True,
+        )
+
+        session.add(admin_user)
+        session.commit()
+
+        print("Created administrator account:")
+        print(f"  username: admin")
+        print(f"  email:    admin@gmail.com")
+        print(f"  password: Admin1!@")
+
+    except Exception as e:
+        session.rollback()
+        print("Error creating administrator account:", e)
+        raise
+    finally:
+        session.close()
+
 
 if __name__ == "__main__":
+    create_administrator_user()
     ingest_to_db(
         "data/gdacs_rss_information.csv", load_dataset, map_earthquake_row_to_incident
     )

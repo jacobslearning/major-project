@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../App.css";
 
-const Navbar = ({ onLogout, isAdmin }) => {
+const Navbar = ({isAdmin }) => {
   return (
     <nav className="navbar">
       <ul className="navbar-list">

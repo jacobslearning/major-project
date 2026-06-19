@@ -195,6 +195,20 @@ def login(
 def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
 
+
+@app.get("/users/", response_model=List[UserResponse])
+def list_users(
+    db: Session = Depends(get_db),
+    _: TokenData = Depends(require_administrator),
+):
+    return (
+        db.query(User)
+        .options(joinedload(User.role))
+        .order_by(User.username)
+        .all()
+    )
+
+
 @app.patch("/users/{user_id}/role", response_model=UserResponse)
 def update_user_role(
     user_id: int,

@@ -20,6 +20,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LiveFeed from "./pages/LiveFeed";
 import Users from "./pages/Users";
+import Logout from "./pages/Logout";
 import {getRole} from "./utils/authHelpers";
 
 import { ThreeDot } from "react-loading-indicators";
@@ -116,12 +117,18 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (isAuthPage) {
-      setLoading(false);
-      return;
-    }
-    fetchIncidents(debouncedFrom, debouncedTo);
-  }, [isAuthPage, debouncedFrom, debouncedTo, fetchIncidents]);
+  if (isAuthPage) {
+    setLoading(false);
+    return;
+  }
+
+  if (!getToken()) {
+    setLoading(false);
+    return;
+  }
+
+  fetchIncidents(debouncedFrom, debouncedTo);
+}, [isAuthPage, debouncedFrom, debouncedTo, fetchIncidents]);
 
   const filteredIncidents = selectedTypes.length
     ? incidents.filter((inc) => selectedTypes.includes(inc.type))
@@ -145,7 +152,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      {!isAuthPage && <Navbar onLogout={logout} isAdmin={isAdmin} />}
+      {!isAuthPage && <Navbar isAdmin={isAdmin} />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -227,6 +234,14 @@ function AppContent() {
           }
         />
         <Route
+          path="/logout"
+          element={
+            <ProtectedRoute>
+              <Logout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/users"
           element={
             <ProtectedRoute requiredRole="administrator">
@@ -234,6 +249,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

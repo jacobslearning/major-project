@@ -1,0 +1,223 @@
+.page {
+  min-height: 100vh;
+  padding: 28px;
+  background: #0b0b0b;
+  color: #e0e0e0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.muted {
+  color: #888;
+}
+
+.errorBox {
+  background: #2a1111;
+  border: 1px solid #5a2222;
+  color: #ff8a8a;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.successBox {
+  background: #102417;
+  border: 1px solid #1f5c33;
+  color: #8df0a6;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #222;
+  border-radius: 8px;
+  background: #111;
+  box-shadow: 0 2px 16px 0 #0008;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+}
+
+.table thead {
+  background: #161616;
+}
+
+.table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  border-bottom: 1px solid #252525;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #ddd;
+  border-bottom: 1px solid #202020;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background 0.15s;
+}
+
+.table tbody tr:hover {
+  background: #151515;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.idCell {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.input,
+.select {
+  width: 100%;
+  min-width: 150px;
+  background: #0b0b0b;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 8px 9px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.input:focus,
+.select:focus {
+  border-color: #00afff;
+  box-shadow: 0 0 0 2px rgba(0, 175, 255, 0.15);
+}
+
+.select {
+  cursor: pointer;
+}
+
+.activeLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #ddd;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.activeLabel input {
+  accent-color: #00afff;
+}
+
+.actionsCol {
+  width: 150px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.saveBtn,
+.resetBtn,
+.refreshBtn {
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 11px;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+
+.saveBtn {
+  background: #0077cc;
+  color: #fff;
+}
+
+.saveBtn:hover {
+  background: #0095ff;
+}
+
+.resetBtn {
+  background: #252525;
+  color: #ddd;
+}
+
+.resetBtn:hover {
+  background: #333;
+}
+
+.refreshBtn {
+  background: #1c1c1c;
+  color: #ddd;
+  border: 1px solid #333;
+}
+
+.refreshBtn:hover {
+  background: #292929;
+}
+
+.saveBtn:disabled,
+.resetBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emptyCell {
+  text-align: center;
+  color: #888;
+  padding: 28px 14px;
+}
+
+.loading-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading {
+  text-align: center;
+}
