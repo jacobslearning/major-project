@@ -1,0 +1,121 @@
+.page {
+  min-height: 100vh;
+  padding: 28px;
+  background: #0b0b0b;
+  color: #e0e0e0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #fff;
+}
+
+.muted {
+  color: #fff;
+}
+
+.error {
+  color: #ff6b6b;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #222;
+  border-radius: 8px;
+  background: #111;
+  box-shadow: 0 2px 16px 0 #0008;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.table thead {
+  background: #161616;
+}
+
+.table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  border-bottom: 1px solid #252525;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #ddd;
+  border-bottom: 1px solid #202020;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background 0.15s;
+}
+
+.table tbody tr:hover {
+  background: #151515;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sourceLink {
+  color: #8ab4ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
+.numberCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyCell {
+  text-align: center;
+  color: #888;
+  padding: 28px 14px;
+}
+
+.loading-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading {
+  text-align: center;
+}
