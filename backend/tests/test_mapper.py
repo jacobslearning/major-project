@@ -1,11 +1,12 @@
+from datetime import datetime
+
 import pandas as pd
 import pytest
 
 from ingest import map_event1pd_row_to_incident
-from models import Incident
 
 
-def test_event1pd_row_maps_into_incident_schema():
+def test_event1pd_row_maps_into_normalized_incident_payload():
     row = pd.Series(
         {
             "date": "20260115",
@@ -43,15 +44,25 @@ def test_event1pd_row_maps_into_incident_schema():
         }
     )
 
-    incident = map_event1pd_row_to_incident(row)
+    payload = map_event1pd_row_to_incident(row)
 
-    assert isinstance(incident, Incident)
-    assert incident.title == "Air Strike at Kyiv, Kyiv Oblast (Times Reported: 4)"
-    assert incident.type == "Air Strike"
-    assert incident.severity == "Military 2, Russian 1, Civilians 3"
-    assert incident.country == "Ukraine"
-    assert incident.city == "Kyiv Raion"
-    assert incident.latitude == pytest.approx(50.4501)
-    assert incident.longitude == pytest.approx(30.5234)
-    assert incident.date_occurred == pd.Timestamp("2026-01-15")
-    assert incident.source_url == "https://example.test/source"
+    assert isinstance(payload, dict)
+    assert payload["title"] == "Air Strike at Kyiv, Kyiv Oblast (Times Reported: 4)"
+    assert payload["incident_type"] == "Air Strike"
+    assert payload["incident_type_description"] == "VIINA event type"
+    assert payload["severity"] == "Military 2, Russian 1, Civilians 3"
+    assert payload["country"] == "Ukraine"
+    assert payload["latitude"] == pytest.approx(50.4501)
+    assert payload["longitude"] == pytest.approx(30.5234)
+    assert payload["incident_date"] == datetime(2026, 1, 15)
+    assert "City: Kyiv Raion" in payload["description"]
+    assert "Original sources: https://example.test/source" in payload["description"]
+
+    assert payload["source"] == {
+    "source_name": "VIINA",
+    "source_type": "dataset",
+    "source_url": "https://github.com/zhukovyuri/VIINA",
+    "update_frequency": "Daily",
+    "reliability_notes": "Deconflicts incident reports from Ukrainan and Russian sources.",
+    "reliability_score": 80,
+}

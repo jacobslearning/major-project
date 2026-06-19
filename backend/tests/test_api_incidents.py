@@ -1,19 +1,50 @@
 from datetime import datetime
 
-from models import Incident
+from models import Incident, IncidentType, Source
+
+def get_or_create_test_incident_type(session):
+    incident_type = session.query(IncidentType).filter(IncidentType.type == "Test").one_or_none()
+    if incident_type:
+        return incident_type
+
+    incident_type = IncidentType(type="Test", description="Test incident type")
+    session.add(incident_type)
+    session.flush()
+    return incident_type
+
+
+def get_or_create_test_source(session):
+    source = session.query(Source).filter(Source.source_url == "https://dddd").one_or_none()
+    if source:
+        return source
+
+    source = Source(
+        source_name="Test Feed",
+        source_type="test",
+        source_url="https://dddd",
+        update_frequency="Daily",
+        reliability_notes="Test source notes",
+        reliability_score=75,
+    )
+    session.add(source)
+    session.flush()
+    return source
 
 
 def add_incident(session, title, occurred_at):
+    incident_type = get_or_create_test_incident_type(session)
+    source = get_or_create_test_source(session)
+
     incident = Incident(
         title=title,
-        type="Test",
+        description="Test incident details",
+        incident_type_id=incident_type.incident_type_id,
+        source_id=source.source_id,
         severity="Low",
         country="UK",
-        city="London",
         latitude=51.5074,
         longitude=-0.1278,
-        date_occurred=occurred_at,
-        source_url="https://dddd",
+        incident_date=occurred_at,
     )
     session.add(incident)
     session.commit()
@@ -38,6 +69,13 @@ def test_get_incidents_date_filters_return_correct_records(client, auth_headers,
     assert response.status_code == 200
     payload = response.json()
     assert [incident["title"] for incident in payload] == ["Inside"]
+
+    inside = payload[0]
+    assert inside["type"] == "Test"
+    assert inside["incident_type"]["type"] == "Test"
+    assert inside["source_url"] == "https://dddd"
+    assert inside["source"]["source_name"] == "Test Feed"
+    assert inside["source"]["reliability_score"] == 75
 
 
 def test_get_incidents_rejects_missing_token(client):

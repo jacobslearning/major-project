@@ -1,9 +1,3 @@
-"""Shared pytest setup for the FastAPI backend.
-
-Place this tests/ folder inside your backend directory.
-The tests use a local SQLite database so they can run without Docker/Postgres.
-"""
-
 import os
 import sys
 from pathlib import Path
@@ -21,7 +15,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH.as_posix()}"
 from auth import create_access_token, hash_password
 from database import Base, SessionLocal, engine
 from main import app
-from models import User
+from models import Role, User
 
 
 @pytest.fixture(autouse=True)
@@ -50,10 +44,15 @@ def client():
 
 @pytest.fixture
 def auth_headers(db_session):
+    role = Role(role_name="analyst", description="Test analyst role")
+    db_session.add(role)
+    db_session.flush()
+
     user = User(
         username="tester",
         email="tester@example.com",
-        hashed_password=hash_password("password123"),
+        password_hash=hash_password("password123"),
+        role_id=role.role_id,
     )
     db_session.add(user)
     db_session.commit()
