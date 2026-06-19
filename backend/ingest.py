@@ -433,7 +433,7 @@ def map_event1pd_row_to_incident(row: pd.Series) -> IncidentPayload:
         f"Location: {title_location}",
         f"City: {city}" if city else None,
         f"Reports: {n_reports}" if n_reports else None,
-        f"Original sources: {source_reference}" if source_reference else None,
+        f"Original Sources: {source_reference}" if source_reference else None,
     )
 
     return {

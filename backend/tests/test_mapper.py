@@ -56,7 +56,7 @@ def test_event1pd_row_maps_into_normalized_incident_payload():
     assert payload["longitude"] == pytest.approx(30.5234)
     assert payload["incident_date"] == datetime(2026, 1, 15)
     assert "City: Kyiv Raion" in payload["description"]
-    assert "Original sources: https://example.test/source" in payload["description"]
+    assert "Original Sources: https://example.test/source" in payload["description"]
 
     assert payload["source"] == {
     "source_name": "VIINA",

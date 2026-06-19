@@ -156,8 +156,6 @@ const escapeHtml = (value) => {
     .replace(/'/g, "&#039;");
 };
 
-const escapeHtmlWithBreaks = (value) => escapeHtml(value).replace(/\n/g, "<br/>");
-
 const isHttpUrl = (value) => {
   try {
     const url = new URL(value);
@@ -205,6 +203,26 @@ const hasDisplayValue = (value) => {
   return text !== "" && text.toUpperCase() !== "N/A";
 };
 
+const formatDescriptionDetails = (description) =>
+  String(description)
+    .split(/\r?\n/)
+    .map((line) => {
+      const [label, ...rest] = line.split(":");
+      const value = rest.join(":").trim();
+
+      if (!value) {
+        return `<div>${escapeHtml(line)}</div>`;
+      }
+
+      return `
+        <div>
+          <strong>${escapeHtml(label.trim())}:</strong>
+          ${escapeHtml(value)}
+        </div>
+      `;
+    })
+    .join("");
+
 const buildPopupHtml = (inc) => {
   const type = getIncidentType(inc);
   const source = getSource(inc);
@@ -219,7 +237,7 @@ const buildPopupHtml = (inc) => {
     ? `
       <div style="margin-bottom: 8px;">
         <div style="font-weight: 700; border-bottom: 1px solid #ddd; margin-bottom: 3px;">Details</div>
-        <div>${escapeHtmlWithBreaks(inc.description)}</div>
+        <div>${formatDescriptionDetails(inc.description)}</div>
       </div>
     `
     : "";
