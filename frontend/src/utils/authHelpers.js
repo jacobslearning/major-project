@@ -1,12 +1,21 @@
 import { jwtDecode } from "jwt-decode";
 
-export const getUsername = () => {
+export const getCurrentUser = () => {
   try {
     const token = localStorage.getItem("token");
     if (!token) return null;
-    const { sub } = jwtDecode(token);
-    return sub || null;
+
+    const { sub, role } = jwtDecode(token);
+
+    return {
+      username: sub || null,
+      role: role || null,
+    };
   } catch {
     return null;
   }
 };
+
+export const getUsername = () => getCurrentUser()?.username || null;
+
+export const getRole = () => getCurrentUser()?.role || null;

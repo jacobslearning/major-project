@@ -1,4 +1,4 @@
-import { getUsername } from "../utils/authHelpers";
+import { getUsername, getRole } from "../utils/authHelpers";
 
 const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
   const today = new Date();
@@ -20,11 +20,12 @@ const Header = ({ fromDate, toDate, setFromDate, setToDate }) => {
   };
 
   const username = getUsername();
+  const role = getRole();
 
   return (
     <header className="header">
       <div className="header-date">{dateTimeString}</div>
-      {username && <div className="header-welcome">Welcome, {username}!</div>}
+      {username && <div className="header-welcome">Welcome, {username} (Role: {role})!</div>}
       <div style={{ flex: 1 }} />
       <div className="filters">
         <label>

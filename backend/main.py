@@ -177,7 +177,10 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = create_access_token(
-        data={"sub": user.username},
+        data={
+            "sub": user.username,
+            "role": user.role.role_name if user.role else None,
+            },
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return {"access_token": token, "token_type": "bearer"}
