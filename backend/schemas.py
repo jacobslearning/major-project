@@ -108,11 +108,21 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role_id: Optional[int] = None
+    role: Optional[RoleResponse] = None
     is_active: bool
     created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
+class UserRoleUpdate(BaseModel):
+    role_id: int
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    role_id: Optional[int] = None
+    is_active: Optional[bool] = None
 
 class Token(BaseModel):
     access_token: str
@@ -122,3 +132,4 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
     role: Optional[str] = None
+    role_id: Optional[int] = None

@@ -21,7 +21,10 @@ from schemas import (
     RoleResponse,
     UserCreate,
     UserResponse,
+    UserRoleUpdate,
+    TokenData,
     Token,
+    UserUpdate,
 )
 from auth import (
     get_db,
@@ -30,6 +33,7 @@ from auth import (
     create_access_token,
     get_current_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    require_administrator
 )
 
 Base.metadata.create_all(bind=engine)
@@ -180,6 +184,7 @@ def login(
         data={
             "sub": user.username,
             "role": user.role.role_name if user.role else None,
+            "role_id": user.role_id,
             },
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
@@ -189,6 +194,109 @@ def login(
 @app.get("/me", response_model=UserResponse)
 def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
+
+@app.patch("/users/{user_id}/role", response_model=UserResponse)
+def update_user_role(
+    user_id: int,
+    role_update: UserRoleUpdate,
+    db: Session = Depends(get_db),
+    admin_token: TokenData = Depends(require_administrator),
+):
+    user = (
+        db.query(User)
+        .options(joinedload(User.role))
+        .filter(User.user_id == user_id)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.username == admin_token.username:
+        raise HTTPException(
+            status_code=400,
+            detail="Administrators cannot change their own role",
+        )
+
+    role = db.query(Role).filter(Role.role_id == role_update.role_id).first()
+
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    user.role_id = role.role_id
+
+    db.commit()
+    db.refresh(user)
+
+    return user
+
+
+@app.patch("/users/{user_id}", response_model=UserResponse)
+def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    _: TokenData = Depends(require_administrator),
+):
+    user = (
+        db.query(User)
+        .options(joinedload(User.role))
+        .filter(User.user_id == user_id)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    update_data = schema_to_dict(user_update, exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No update fields provided")
+
+    if "username" in update_data:
+        existing_user = (
+            db.query(User)
+            .filter(User.username == update_data["username"])
+            .filter(User.user_id != user_id)
+            .first()
+        )
+
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+        user.username = update_data["username"]
+
+    if "email" in update_data:
+        existing_email = (
+            db.query(User)
+            .filter(User.email == update_data["email"])
+            .filter(User.user_id != user_id)
+            .first()
+        )
+
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        user.email = update_data["email"]
+
+    if "password" in update_data:
+        user.password_hash = hash_password(update_data["password"])
+
+    if "role_id" in update_data:
+        role = db.query(Role).filter(Role.role_id == update_data["role_id"]).first()
+
+        if not role:
+            raise HTTPException(status_code=404, detail="Role not found")
+
+        user.role_id = role.role_id
+
+    if "is_active" in update_data:
+        user.is_active = update_data["is_active"]
+
+    db.commit()
+    db.refresh(user)
+
+    return user
 
 
 @app.post("/roles/", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
