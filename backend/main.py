@@ -250,7 +250,7 @@ def update_user(
     user_id: int,
     user_update: UserUpdate,
     db: Session = Depends(get_db),
-    _: TokenData = Depends(require_administrator),
+    admin_token: TokenData = Depends(require_administrator),
 ):
     user = (
         db.query(User)
@@ -266,6 +266,27 @@ def update_user(
 
     if not update_data:
         raise HTTPException(status_code=400, detail="No update fields provided")
+
+    is_self_update = user.username == admin_token.username
+
+    if is_self_update:
+        if "role_id" in update_data:
+            new_role = db.query(Role).filter(Role.role_id == update_data["role_id"]).first()
+
+            if not new_role:
+                raise HTTPException(status_code=404, detail="Role not found")
+
+            if new_role.role_name != "administrator":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Administrators cannot demote themselves",
+                )
+
+        if update_data.get("is_active") is False:
+            raise HTTPException(
+                status_code=400,
+                detail="Administrators cannot deactivate themselves",
+            )
 
     if "username" in update_data:
         existing_user = (
