@@ -19,6 +19,8 @@ import Incidents from "./pages/Incidents";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LiveFeed from "./pages/LiveFeed";
+import Users from "./pages/Users";
+import {getRole} from "./utils/authHelpers";
 
 import { ThreeDot } from "react-loading-indicators";
 
@@ -36,8 +38,11 @@ export function logout() {
   window.location.href = "/login";
 }
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, requiredRole = null }) {
   if (!getToken()) return <Navigate to="/login" replace />;
+  if (requiredRole && getRole() !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
   return children;
 }
 // debounce hook taken from w3schools
@@ -53,6 +58,7 @@ function useDebounce(value, delay) {
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
+  const isAdmin = getRole() === "administrator";
 
   const today = new Date().toISOString().split("T")[0];
   const twoMonthsAgo = new Date();
@@ -139,7 +145,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      {!isAuthPage && <Navbar onLogout={logout} />}
+      {!isAuthPage && <Navbar onLogout={logout} isAdmin={isAdmin} />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -217,6 +223,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <LiveFeed />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute requiredRole="administrator">
+              <Users />
             </ProtectedRoute>
           }
         />
