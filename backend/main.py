@@ -25,6 +25,7 @@ from schemas import (
     TokenData,
     Token,
     UserUpdate,
+    AdminUserCreate,
 )
 from auth import (
     get_db,
@@ -207,6 +208,38 @@ def list_users(
         .order_by(User.username)
         .all()
     )
+
+
+@app.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user_admin(
+    user_in: AdminUserCreate,
+    db: Session = Depends(get_db),
+    _: TokenData = Depends(require_administrator),
+):
+    if db.query(User).filter(User.username == user_in.username).first():
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    if db.query(User).filter(User.email == user_in.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    role = db.query(Role).filter(Role.role_id == user_in.role_id).first()
+
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    new_user = User(
+        username=user_in.username,
+        email=user_in.email,
+        password_hash=hash_password(user_in.password),
+        role_id=role.role_id,
+        is_active=user_in.is_active,
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
 
 
 @app.patch("/users/{user_id}/role", response_model=UserResponse)

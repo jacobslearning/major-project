@@ -124,6 +124,12 @@ class UserUpdate(BaseModel):
     role_id: Optional[int] = None
     is_active: Optional[bool] = None
 
+class AdminUserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    role_id: Optional[int] = None
+    is_active: Optional[bool] = True
 class Token(BaseModel):
     access_token: str
     token_type: str

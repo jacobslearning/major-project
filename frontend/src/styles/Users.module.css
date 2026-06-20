@@ -221,3 +221,115 @@
 .loading {
   text-align: center;
 }
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.addUserBtn {
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 11px;
+  background: #0077cc;
+  color: #fff;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+
+.addUserBtn:hover {
+  background: #0095ff;
+}
+
+.dialogBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 520px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px #000d;
+  overflow: hidden;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  background: #161616;
+  border-bottom: 1px solid #222;
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  color: #fff;
+}
+
+.dialogSubtitle {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 13px;
+}
+
+.dialogCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 26px;
+  line-height: 1;
+  padding: 0;
+}
+
+.dialogCloseBtn:hover {
+  color: #fff;
+}
+
+.dialogBody {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formField span {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.dialogActions {
+  padding: 16px 20px;
+  background: #161616;
+  border-top: 1px solid #222;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
