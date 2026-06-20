@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -21,7 +21,7 @@ import Register from "./pages/Register";
 import LiveFeed from "./pages/LiveFeed";
 import Users from "./pages/Users";
 import Logout from "./pages/Logout";
-import {getRole} from "./utils/authHelpers";
+import { getRole } from "./utils/authHelpers";
 
 import { ThreeDot } from "react-loading-indicators";
 
@@ -56,10 +56,15 @@ function useDebounce(value, delay) {
   return debounced;
 }
 
+const getIncidentTypeName = (incident) => {
+  return incident.type || incident.incident_type?.type || "";
+};
+
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
   const isAdmin = getRole() === "administrator";
+  const isMapPage = location.pathname === "/";
 
   const today = new Date().toISOString().split("T")[0];
   const twoMonthsAgo = new Date();
@@ -72,7 +77,6 @@ function AppContent() {
   const [selectedTypes, setSelectedTypes] = useState([]);
 
   const [incidents, setIncidents] = useState([]);
-  const [allIncidentTypes, setAllIncidentTypes] = useState([]);
   const [loading, setLoading] = useState(!isAuthPage);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -102,10 +106,6 @@ function AppContent() {
 
       const data = res.data;
       setIncidents(data);
-
-      setAllIncidentTypes(
-        Array.from(new Set(data.map((i) => i.type).filter(Boolean))).sort(),
-      );
     } catch (err) {
       if (axios.isCancel(err)) return;
       console.error(err);
@@ -116,23 +116,47 @@ function AppContent() {
     }
   }, []);
 
+  const allIncidentTypes = useMemo(() => {
+    return Array.from(
+      new Set(
+        incidents
+          .map((incident) => getIncidentTypeName(incident))
+          .filter(Boolean),
+      ),
+    ).sort();
+  }, [incidents]);
+
   useEffect(() => {
-  if (isAuthPage) {
-    setLoading(false);
-    return;
-  }
+    setSelectedTypes((current) =>
+      current.filter((type) => allIncidentTypes.includes(type)),
+    );
+  }, [allIncidentTypes]);
 
-  if (!getToken()) {
-    setLoading(false);
-    return;
-  }
+  useEffect(() => {
+    if (isAuthPage || !isMapPage) {
+      setLoading(false);
+      setFetchingMore(false);
+      return;
+    }
 
-  fetchIncidents(debouncedFrom, debouncedTo);
-}, [isAuthPage, debouncedFrom, debouncedTo, fetchIncidents]);
+    if (!getToken()) {
+      setLoading(false);
+      setFetchingMore(false);
+      return;
+    }
 
-  const filteredIncidents = selectedTypes.length
-    ? incidents.filter((inc) => selectedTypes.includes(inc.type))
-    : incidents;
+    fetchIncidents(debouncedFrom, debouncedTo);
+  }, [isAuthPage, isMapPage, debouncedFrom, debouncedTo, fetchIncidents]);
+
+  const filteredIncidents = useMemo(() => {
+    if (!selectedTypes.length) {
+      return incidents;
+    }
+
+    return incidents.filter((incident) =>
+      selectedTypes.includes(getIncidentTypeName(incident)),
+    );
+  }, [incidents, selectedTypes]);
 
   if (loading) {
     return (
