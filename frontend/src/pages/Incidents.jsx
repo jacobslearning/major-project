@@ -92,6 +92,9 @@ const Incidents = () => {
   const [fromDateFilter, setFromDateFilter] = useState(getDefaultFromDate());
   const [toDateFilter, setToDateFilter] = useState(getDefaultToDate());
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newIncident, setNewIncident] = useState(emptyIncident);
   const [newSource, setNewSource] = useState(emptySource);
@@ -356,6 +359,25 @@ const Incidents = () => {
       return true;
     });
   }, [incidents, typeFilter, fromDateFilter, toDateFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    typeFilter,
+    fromDateFilter,
+    toDateFilter,
+    rowsPerPage,
+    filteredIncidents.length,
+  ]);
+
+  const totalRows = filteredIncidents.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const startIndex = totalRows === 0 ? 0 : (safeCurrentPage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+
+  const paginatedIncidents = filteredIncidents.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -774,7 +796,7 @@ const Incidents = () => {
                 </td>
               </tr>
             ) : (
-              filteredIncidents.map((incident) => (
+              paginatedIncidents.map((incident) => (
                 <tr key={incident.incident_id}>
                   <td className={styles.idCell}>{incident.incident_id}</td>
                   <td>{incident.title || "N/A"}</td>
@@ -792,6 +814,51 @@ const Incidents = () => {
           </tbody>
         </table>
       </div>
+      {filteredIncidents.length > 0 && (
+        <div className={styles.pagination}>
+          <div className={styles.paginationInfo}>
+            Showing {startIndex + 1}-{endIndex} of {totalRows} incidents
+          </div>
+
+          <div className={styles.paginationControls}>
+            <label className={styles.rowsPerPage}>
+              Rows per page
+              <select
+                className={styles.rowsSelect}
+                value={rowsPerPage}
+                onChange={(event) => setRowsPerPage(Number(event.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+
+            <button
+              className={styles.pageBtn}
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            >
+              Previous
+            </button>
+
+            <span className={styles.pageStatus}>
+              Page {safeCurrentPage} of {totalPages}
+            </span>
+
+            <button
+              className={styles.pageBtn}
+              disabled={safeCurrentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((page) => Math.min(totalPages, page + 1))
+              }
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
