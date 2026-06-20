@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ThreeDot } from "react-loading-indicators";
 import { COUNTRIES } from "../utils/geo";
+import { getRole } from "../utils/authHelpers";
 import styles from "../styles/Incidents.module.css";
 
 const API_URL = "http://localhost:8000";
@@ -99,6 +100,10 @@ const Incidents = () => {
   const [newIncident, setNewIncident] = useState(emptyIncident);
   const [newSource, setNewSource] = useState(emptySource);
   const [useNewSource, setUseNewSource] = useState(true);
+
+  const isAdmin = getRole() === "administrator";
+  const [deletingIncidentId, setDeletingIncidentId] = useState(null);
+  const [incidentToDelete, setIncidentToDelete] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -313,6 +318,58 @@ const Incidents = () => {
       setCreating(false);
     }
   };
+
+  const openDeleteDialog = (incident) => {
+    setIncidentToDelete(incident);
+    setError("");
+    setMessage("");
+  };
+
+  const closeDeleteDialog = () => {
+    if (deletingIncidentId !== null) {
+      return;
+    }
+
+    setIncidentToDelete(null);
+  };
+
+  const confirmDeleteIncident = async () => {
+    if (!incidentToDelete) {
+      return;
+    }
+
+    const incident = incidentToDelete;
+    const incidentId = incident.incident_id;
+
+    setDeletingIncidentId(incidentId);
+    setError("");
+    setMessage("");
+
+    try {
+      await axios.delete(`${API_URL}/incidents/${incidentId}`, {
+        headers: getAuthHeaders(),
+      });
+
+      setIncidents((current) =>
+        current.filter((existingIncident) => {
+          return existingIncident.incident_id !== incidentId;
+        }),
+      );
+
+      setMessage(`Deleted incident: ${incident.title || incidentId}`);
+      setIncidentToDelete(null);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to delete incident",
+      );
+    } finally {
+      setDeletingIncidentId(null);
+    }
+  };
+
   // filtering code taken from w3schools
   const filteredIncidents = useMemo(() => {
     return incidents.filter((incident) => {
@@ -773,6 +830,64 @@ const Incidents = () => {
         </div>
       )}
 
+      {incidentToDelete && (
+        <div className={styles.dialogBackdrop} onMouseDown={closeDeleteDialog}>
+          <div
+            className={`${styles.dialog} ${styles.confirmDialog}`}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.dialogHeader}>
+              <div>
+                <h3 className={styles.dialogTitle}>Delete Incident</h3>
+                <p className={styles.dialogSubtitle}>
+                  Are you sure? This cannot be undone.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.dialogCloseBtn}
+                onClick={closeDeleteDialog}
+                disabled={deletingIncidentId !== null}
+              >
+                x
+              </button>
+            </div>
+
+            <div className={styles.dialogBody}>
+              <p className={styles.confirmText}>
+                You are about to permanently delete this incident:
+              </p>
+
+              <div className={styles.incidentPreview}>
+                <strong>{incidentToDelete.title || "N/A"}</strong>
+                <span>ID: {incidentToDelete.incident_id}</span>
+              </div>
+            </div>
+
+            <div className={styles.dialogActions}>
+              <button
+                type="button"
+                className={styles.resetBtn}
+                onClick={closeDeleteDialog}
+                disabled={deletingIncidentId !== null}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className={styles.deleteBtn}
+                onClick={confirmDeleteIncident}
+                disabled={deletingIncidentId !== null}
+              >
+                {deletingIncidentId !== null ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -785,13 +900,14 @@ const Incidents = () => {
               <th>Source</th>
               <th>Date</th>
               <th>Coordinates</th>
+              {isAdmin && <th className={styles.actionsCol}>Actions</th>}
             </tr>
           </thead>
 
           <tbody>
             {filteredIncidents.length === 0 ? (
               <tr>
-                <td className={styles.emptyCell} colSpan="8">
+                <td className={styles.emptyCell} colSpan={isAdmin ? 9 : 8}>
                   No incidents found.
                 </td>
               </tr>
@@ -808,6 +924,19 @@ const Incidents = () => {
                   <td>
                     {formatCoordinates(incident.latitude, incident.longitude)}
                   </td>
+                  {isAdmin && (
+                    <td className={styles.actions}>
+                      <button
+                        className={styles.deleteBtn}
+                        disabled={deletingIncidentId === incident.incident_id}
+                        onClick={() => openDeleteDialog(incident)}
+                      >
+                        {deletingIncidentId === incident.incident_id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

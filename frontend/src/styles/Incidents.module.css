@@ -377,6 +377,71 @@
   margin-left: 10px;
 }
 
+.actionsCol {
+  width: 120px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.deleteBtn {
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 11px;
+  background: #5c1f1f;
+  color: #ffb3b3;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #7a2929;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirmDialog {
+  max-width: 460px;
+}
+
+.confirmText {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.incidentPreview {
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0b0b0b;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.incidentPreview strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.incidentPreview span {
+  color: #f7f7f7;
+  font-size: 12px;
+}
+
 .pagination {
   margin-top: 14px;
   padding: 12px 14px;

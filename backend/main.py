@@ -521,11 +521,19 @@ def update_incident(
 
 @app.delete("/incidents/{incident_id}")
 def delete_incident(
-    incident_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)
+    incident_id: int,
+    db: Session = Depends(get_db),
+    _: TokenData = Depends(require_administrator),
 ):
-    incident = db.query(Incident).filter(Incident.incident_id == incident_id).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.incident_id == incident_id)
+        .first()
+    )
+
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+
     db.delete(incident)
     db.commit()
     return {"Info": f"Incident {incident_id} deleted"}
