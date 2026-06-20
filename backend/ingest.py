@@ -525,13 +525,13 @@ def create_administrator_user() -> None:
         administrator_role = get_or_create_role(
             session,
             "administrator",
-            "Administrator role with full user and system management access.",
+            "Administrator role with root access.",
         )
 
         get_or_create_role(
             session,
             "analyst",
-            "Default analyst role for standard users.",
+            "Default analyst role.",
         )
 
         existing_user = (
@@ -570,8 +570,58 @@ def create_administrator_user() -> None:
         session.close()
 
 
+def create_normal_user(username: str, email: str, password: str) -> None:
+    session: Session = SessionLocal()
+
+    try:
+        analyst_role = get_or_create_role(
+            session,
+            "analyst",
+            "Default analyst role.",
+        )
+
+        existing_user = (
+            session.query(User)
+            .filter((User.username == username) | (User.email == email))
+            .one_or_none()
+        )
+
+        if existing_user:
+            return
+
+        normal_user = User(
+            username=username,
+            email=email,
+            password_hash=hash_password(password),
+            role_id=analyst_role.role_id,
+            is_active=True,
+        )
+
+        session.add(normal_user)
+        session.commit()
+
+        print("Created normal user account:")
+        print(f"  username: {username}")
+        print(f"  email:    {email}")
+        print(f"  password: {password}")
+
+    except Exception as e:
+        session.rollback()
+        print("Error creating normal user account:", e)
+        raise
+    finally:
+        session.close()
+            
+
+
 if __name__ == "__main__":
     create_administrator_user()
+    create_normal_user("BillieJean1", "billie.jean@gmail.com", "Password1!@")
+    create_normal_user("MonaLisa", "mona.lisa@gmail.com", "Password1!@")
+    create_normal_user("OllyMurs123", "olly.murs@gmail.com", "Password1!@")
+    create_normal_user("SamFender34", "sam.fender@gmail.com", "Password1!@")
+    create_normal_user("testing", "testing@gmail.com", "Password1!@")
+    create_normal_user("bruno_mars", "bruno.mars@gmail.com", "Password1!@")
     ingest_to_db(
         "data/gdacs_rss_information.csv", load_dataset, map_earthquake_row_to_incident
     )
