@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../App.css";
 
-const Navbar = () => {
+const Navbar = ({isAdmin }) => {
   return (
     <nav className="navbar">
       <ul className="navbar-list">
@@ -21,6 +21,11 @@ const Navbar = () => {
         <li>
           <Link to="/incidents">Incidents</Link>
         </li>
+        {isAdmin && (
+          <li>
+            <Link to="/users">Users</Link>
+          </li>
+        )}
       </ul>
       <div className="navbar-title">Overseas Incident Monitoring</div>
     </nav>

@@ -146,6 +146,131 @@ const getMarkerIcon = (type, severity) => {
   return icon;
 };
 
+const escapeHtml = (value) => {
+  if (value === null || value === undefined || value === "") return "N/A";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+const isHttpUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const formatDate = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString();
+};
+
+const formatReliability = (score) => {
+  if (score === null || score === undefined || score === "") return "N/A";
+  const numericScore = Number(score);
+  if (Number.isNaN(numericScore)) return escapeHtml(score);
+  return `${numericScore}/100`;
+};
+
+const formatCoordinates = (latitude, longitude) => {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "N/A";
+  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+};
+
+const getIncidentType = (inc) => inc.incident_type?.type || inc.type || "N/A";
+const getIncidentDate = (inc) => inc.incident_date || inc.date_occurred;
+const getSource = (inc) => inc.source || {};
+
+const buildSourceUrlHtml = (sourceUrl) => {
+  if (!sourceUrl) return "N/A";
+  if (!isHttpUrl(sourceUrl)) return escapeHtml(sourceUrl);
+
+  return `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Open source</a>`;
+};
+
+const hasDisplayValue = (value) => {
+  if (value === null || value === undefined) return false;
+  const text = String(value).trim();
+  return text !== "" && text.toUpperCase() !== "N/A";
+};
+
+const formatDescriptionDetails = (description) =>
+  String(description)
+    .split(/\r?\n/)
+    .map((line) => {
+      const [label, ...rest] = line.split(":");
+      const value = rest.join(":").trim();
+
+      if (!value) {
+        return `<div>${escapeHtml(line)}</div>`;
+      }
+
+      return `
+        <div>
+          <strong>${escapeHtml(label.trim())}:</strong>
+          ${escapeHtml(value)}
+        </div>
+      `;
+    })
+    .join("");
+
+const buildPopupHtml = (inc) => {
+  const type = getIncidentType(inc);
+  const source = getSource(inc);
+  const sourceUrl = source.source_url || inc.source_url;
+  const sourceName = source.source_name || "N/A";
+  const sourceType = source.source_type || "N/A";
+  const updateFrequency = source.update_frequency || "N/A";
+  const reliabilityScore = formatReliability(source.reliability_score);
+  const reliabilityNotes = source.reliability_notes || "N/A";
+
+  const detailsHtml = hasDisplayValue(inc.description)
+    ? `
+      <div style="margin-bottom: 8px;">
+        <div style="font-weight: 700; border-bottom: 1px solid #ddd; margin-bottom: 3px;">Details</div>
+        <div>${formatDescriptionDetails(inc.description)}</div>
+      </div>
+    `
+    : "";
+
+  return `
+    <div style="min-width: 260px; max-width: 360px; line-height: 1.35;">
+      <div style="font-weight: 700; font-size: 14px; margin-bottom: 6px;">
+        ${escapeHtml(inc.title)}
+      </div>
+
+      <div style="margin-bottom: 8px;">
+        <div><strong>Type:</strong> ${escapeHtml(type)}</div>
+        <div><strong>Severity:</strong> ${escapeHtml(inc.severity)}</div>
+        <div><strong>Country:</strong> ${escapeHtml(inc.country)}</div>
+        <div><strong>Coordinates:</strong> ${escapeHtml(formatCoordinates(inc.latitude, inc.longitude))}</div>
+        <div><strong>Date:</strong> ${escapeHtml(formatDate(getIncidentDate(inc)))}</div>
+      </div>
+
+      ${detailsHtml}
+
+      <div>
+        <div style="font-weight: 700; border-bottom: 1px solid #ddd; margin-bottom: 3px;">Source</div>
+        <div><strong>Name:</strong> ${escapeHtml(sourceName)}</div>
+        <div><strong>Type:</strong> ${escapeHtml(sourceType)}</div>
+        <div><strong>Update frequency:</strong> ${escapeHtml(updateFrequency)}</div>
+        <div><strong>Reliability:</strong> ${escapeHtml(reliabilityScore)}</div>
+        <div><strong>Reliability notes:</strong> ${escapeHtml(reliabilityNotes)}</div>
+        <div><strong>URL:</strong> ${buildSourceUrlHtml(sourceUrl)}</div>
+      </div>
+    </div>
+  `;
+};
+
 const BATCH_SIZE = 200;
 
 export const ClusteredMarkers = ({ incidents }) => {
@@ -185,27 +310,21 @@ export const ClusteredMarkers = ({ incidents }) => {
     const cluster = clusterRef.current;
     cluster.clearLayers();
 
-    const valid = (incidents || []).filter(
-      (inc) => inc.latitude && inc.longitude,
-    );
+    const valid = (incidents || []).filter((inc) => {
+      const lat = Number(inc.latitude);
+      const lng = Number(inc.longitude);
+      return Number.isFinite(lat) && Number.isFinite(lng);
+    });
 
     if (valid.length === 0) return;
 
     const markers = valid.map((inc) => {
-      const marker = L.marker([inc.latitude, inc.longitude], {
-        icon: getMarkerIcon(inc.type, inc.severity),
+      const type = getIncidentType(inc);
+      const marker = L.marker([Number(inc.latitude), Number(inc.longitude)], {
+        icon: getMarkerIcon(type, inc.severity),
       });
-      marker.bindPopup(`
-        <b>${inc.title}</b><br/>
-        Type: ${inc.type || "N/A"}<br/>
-        Severity: ${inc.severity || "N/A"}<br/>
-        Location: ${inc.city || "N/A"}, ${inc.country || "N/A"}<br/>
-        Date: ${
-          inc.date_occurred
-            ? new Date(inc.date_occurred).toLocaleDateString()
-            : "N/A"
-        }
-      `);
+
+      marker.bindPopup(buildPopupHtml(inc), { maxWidth: 420 });
       return marker;
     });
 

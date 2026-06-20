@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,6 +19,9 @@ import Incidents from "./pages/Incidents";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LiveFeed from "./pages/LiveFeed";
+import Users from "./pages/Users";
+import Logout from "./pages/Logout";
+import { getRole } from "./utils/authHelpers";
 
 import { ThreeDot } from "react-loading-indicators";
 
@@ -36,8 +39,11 @@ export function logout() {
   window.location.href = "/login";
 }
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, requiredRole = null }) {
   if (!getToken()) return <Navigate to="/login" replace />;
+  if (requiredRole && getRole() !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
   return children;
 }
 // debounce hook taken from w3schools
@@ -50,9 +56,15 @@ function useDebounce(value, delay) {
   return debounced;
 }
 
+const getIncidentTypeName = (incident) => {
+  return incident.type || incident.incident_type?.type || "";
+};
+
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
+  const isAdmin = getRole() === "administrator";
+  const isMapPage = location.pathname === "/";
 
   const today = new Date().toISOString().split("T")[0];
   const twoMonthsAgo = new Date();
@@ -65,7 +77,6 @@ function AppContent() {
   const [selectedTypes, setSelectedTypes] = useState([]);
 
   const [incidents, setIncidents] = useState([]);
-  const [allIncidentTypes, setAllIncidentTypes] = useState([]);
   const [loading, setLoading] = useState(!isAuthPage);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -95,10 +106,6 @@ function AppContent() {
 
       const data = res.data;
       setIncidents(data);
-
-      setAllIncidentTypes(
-        Array.from(new Set(data.map((i) => i.type).filter(Boolean))).sort(),
-      );
     } catch (err) {
       if (axios.isCancel(err)) return;
       console.error(err);
@@ -109,17 +116,47 @@ function AppContent() {
     }
   }, []);
 
+  const allIncidentTypes = useMemo(() => {
+    return Array.from(
+      new Set(
+        incidents
+          .map((incident) => getIncidentTypeName(incident))
+          .filter(Boolean),
+      ),
+    ).sort();
+  }, [incidents]);
+
   useEffect(() => {
-    if (isAuthPage) {
+    setSelectedTypes((current) =>
+      current.filter((type) => allIncidentTypes.includes(type)),
+    );
+  }, [allIncidentTypes]);
+
+  useEffect(() => {
+    if (isAuthPage || !isMapPage) {
       setLoading(false);
+      setFetchingMore(false);
       return;
     }
-    fetchIncidents(debouncedFrom, debouncedTo);
-  }, [isAuthPage, debouncedFrom, debouncedTo, fetchIncidents]);
 
-  const filteredIncidents = selectedTypes.length
-    ? incidents.filter((inc) => selectedTypes.includes(inc.type))
-    : incidents;
+    if (!getToken()) {
+      setLoading(false);
+      setFetchingMore(false);
+      return;
+    }
+
+    fetchIncidents(debouncedFrom, debouncedTo);
+  }, [isAuthPage, isMapPage, debouncedFrom, debouncedTo, fetchIncidents]);
+
+  const filteredIncidents = useMemo(() => {
+    if (!selectedTypes.length) {
+      return incidents;
+    }
+
+    return incidents.filter((incident) =>
+      selectedTypes.includes(getIncidentTypeName(incident)),
+    );
+  }, [incidents, selectedTypes]);
 
   if (loading) {
     return (
@@ -139,7 +176,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      {!isAuthPage && <Navbar onLogout={logout} />}
+      {!isAuthPage && <Navbar isAdmin={isAdmin} />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -220,6 +257,23 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/logout"
+          element={
+            <ProtectedRoute>
+              <Logout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute requiredRole="administrator">
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
