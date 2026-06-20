@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import styles from "../styles/Users.module.css";
 import { ThreeDot } from "react-loading-indicators";
-
+import {isValidEmail, isValidPassword} from "../utils/validation";
 const API_URL = "http://localhost:8000";
 
 const getToken = () => localStorage.getItem("token");
@@ -92,6 +92,27 @@ const Users = () => {
     }));
   };
 
+  const validateUserDraft = (draft) => {
+    if (!draft.username.trim()) {
+      return "Username is required";
+    }
+
+    if (!draft.email.trim()) {
+      return "Email is required";
+    }
+
+    if (!isValidEmail(draft.email.trim())) {
+      return "Enter a valid email address";
+    }
+
+    if(!isValidPassword(draft.password.trim()) && draft.password.trim() !== "") {
+      return "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number";
+    }
+
+    return null;
+  };
+
+
   const saveUser = async (user) => {
     const userId = userIdOf(user);
     const draft = drafts[userId];
@@ -101,6 +122,11 @@ const Users = () => {
     setMessage("");
 
     try {
+      const validationError = validateUserDraft(draft);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
       const payload = {
         username: draft.username,
         email: draft.email,
